@@ -1,56 +1,97 @@
-  import { initializeApp, applicationDefault } from 'firebase-admin/app';
-  import { getMessaging } from "firebase-admin/messaging";
-  import express from "express";
-  import cors from "cors";
+import { initializeApp, applicationDefault } from "firebase-admin/app";
+import { getMessaging } from "firebase-admin/messaging";
+import { SMTPClient } from "emailjs";
+import bodyParser from "body-parser";
+import express from "express";
+import cors from "cors";
 
-  process.env.GOOGLE_APPLICATION_CREDENTIALS;
+process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-  const app = express();
-  app.use(express.json());
+initializeApp({
+  credential: applicationDefault(),
+  projectId: "chat-app-186d1",
+});
 
-  app.use(cors({
+const client = new SMTPClient({
+  user: "idkmaybeken@gmail.com",
+  password: "frrr dcst aolr qjxq",
+  host: "smtp.gmail.com",
+  ssl: true,
+});
+
+const app = express();
+
+app.use(express.json());
+app.use(bodyParser.json());
+
+app.use(
+  cors({
     origin: "*",
-    methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
-  }));
+    methods: ["POST"],
+  })
+);
 
-  app.use((req, res, next) => {
-    res.setHeader("Content-Type", "application/json");
-    next();
-  });
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/json");
+  next();
+});
 
-  initializeApp({
-    credential: applicationDefault(),
-    projectId: 'chat-app-186d1',
-  });
+app.post("/api/push-notify", function (req, res) {
+  const data = req.body;
 
-  app.post("/send", function (req, res) {
-    const receivedToken = req.body.fcmToken;
-    // const receivedToken = ["c7VmA-MD7bC29EhL3ZzsWM:APA91bF75gmX7fAmsOMSG6n-bvGaIjpeWaAtw_GnlNL8Zi-BU9GTxWmrgGFTBerL0egAcsdGOb36Kr9a7EaBjchhqSy7wtc0p6pFrQ8PxPvduetGn-3BgNo"]
-    console.log(receivedToken);
-    
-    const message = {
-      notification: {
-        title: "Notif",
-        body: 'This is a Test Notification'
-      },
-      tokens: receivedToken,  // Use a single token here
-    };
+  if (!data.fcmToken || !data.title || !data.body || !data.icon) {
+    return res.status(400).json({ error: "Invalid request body" });
+  }
 
-    getMessaging()
-      .sendEachForMulticast(message)  // Use send instead of sendEachForMulticast
-      .then((response) => {
-        res.status(200).json({
-          message: "Successfully sent message",
-          token: receivedToken,
-        });
-        console.log("Successfully sent message:", response);
-      })
-      .catch((error) => {
-        res.status(400).json({ error: error.message });
-        console.log("Error sending message:", error);
+  const message = {
+    notification: {
+      title: data.title,
+      body: data.body,
+      icon: data.icon,
+    },
+    token: data.fcmToken,
+  };
+
+  getMessaging()
+    .sendEachForMulticast(message) // Use send instead of sendEachForMulticast
+    .then((response) => {
+      res.status(200).json({
+        message: "Successfully sent message",
+        token: receivedToken,
       });
-  });
+      console.log("Successfully sent message:", response);
+    })
+    .catch((error) => {
+      res.status(400).json({ error: error.message });
+      console.log("Error sending message:", error);
+    });
+});
 
-  app.listen(8000, function () {
-    console.log("Server started on http://localhost:8000/send");
-  });
+app.post("/api/email-notify", function (req, res) {
+  const data = req.body;
+
+  if (!data.text || !data.from || !data.to || !data.subject) {
+    return res.status(400).json({ error: "Invalid request body" });
+  }
+
+  client.send(
+    {
+      text: data.text,
+      from: data.from,
+      to: data.to,
+      subject: data.subject,
+    },
+    (error, message) => {
+      console.log(error || message);
+      if (error) res.status(400).json({ error: error.message });
+      res.status(200).json({
+        message: "Successfully sent message",
+        info: message,
+      });
+    }
+  );
+});
+
+app.listen(8000, function () {
+  console.log("Server started on http://localhost:8000");
+});
