@@ -57,14 +57,14 @@ app.post("/api/push-notify", function (req, res) {
     .sendEachForMulticast(message) // Use send instead of sendEachForMulticast
     .then((response) => {
       res.status(200).json({
-        message: "Successfully sent message",
+        message: "Successfully sent push message",
         token: receivedToken,
       });
-      console.log("Successfully sent message:", response);
+      console.log("Successfully sent push message:", response);
     })
     .catch((error) => {
       res.status(400).json({ error: error.message });
-      console.log("Error sending message:", error);
+      console.log("Error sending push message:", error);
     });
 });
 
@@ -84,11 +84,15 @@ app.post("/api/email-notify", function (req, res) {
     },
     (error, message) => {
       console.log(error || message);
-      if (error) res.status(400).json({ error: error.message });
-      res.status(200).json({
-        message: "Successfully sent message",
-        info: message,
-      });
+      if (error) {
+        res.status(400).json({ error: error.message });
+        console.log("Error sending email message:", error);
+      } else {
+        res.status(200).json({
+          message: "Successfully sent email message",
+          info: message,
+        });
+      }
     }
   );
 });
