@@ -19,6 +19,7 @@ const client = new SMTPClient({
   ssl: true,
 });
 
+const port = process.env.PORT || 8000;
 const app = express();
 
 app.use(express.json());
@@ -92,6 +93,6 @@ app.post("/api/email-notify", function (req, res) {
   );
 });
 
-app.listen(8000, function () {
-  console.log("Server started on http://localhost:8000");
+app.listen(port || 8000, function () {
+  console.log(`Server listening on port ${port}`);
 });
