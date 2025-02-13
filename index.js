@@ -9,12 +9,12 @@ process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 initializeApp({
   credential: applicationDefault(),
-  projectId: "chat-app-186d1",
+  projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
 const client = new SMTPClient({
-  user: "idkmaybeken@gmail.com",
-  password: "frrr dcst aolr qjxq",
+  user: process.env.EMAIL_USER,
+  password: process.env.EMAIL_PASSWORD,
   host: "smtp.gmail.com",
   ssl: true,
 });
