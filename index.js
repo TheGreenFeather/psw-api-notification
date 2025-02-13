@@ -103,5 +103,5 @@ const server = app.listen(port || 8000, function () {
   console.log(`Server listening on port ${port}`);
 });
 
-server.keepAliveTimeout = Infinity;
-server.headersTimeout = Infinity;
+server.keepAliveTimeout = 1800 * 1000;
+server.headersTimeout = 120 * 1000;
