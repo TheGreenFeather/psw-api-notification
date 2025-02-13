@@ -92,6 +92,7 @@ app.post("/api/email-notify", function (req, res) {
           message: "Successfully sent email message",
           info: message,
         });
+        console.log("Successfully sent email message:", message);
       }
     }
   );
