@@ -75,29 +75,33 @@ app.post("/api/email-notify", function (req, res) {
     return res.status(400).json({ error: "Invalid request body" });
   }
 
+  const message = {
+    text: data.text,
+    from: data.from,
+    to: data.to,
+    subject: data.subject,
+  };
+
   client.send(
-    {
-      text: data.text,
-      from: data.from,
-      to: data.to,
-      subject: data.subject,
-    },
-    (error, message) => {
-      console.log(error || message);
+    message,
+    (error, messageInfo) => {
       if (error) {
         res.status(400).json({ error: error.message });
         console.log("Error sending email message:", error);
       } else {
         res.status(200).json({
           message: "Successfully sent email message",
-          info: message,
+          info: messageInfo,
         });
-        console.log("Successfully sent email message:", message);
+        console.log("Successfully sent email message:", messageInfo);
       }
     }
   );
 });
 
-app.listen(port || 8000, function () {
+const server = app.listen(port || 8000, function () {
   console.log(`Server listening on port ${port}`);
 });
+
+server.keepAliveTimeout = Infinity;
+server.headersTimeout = Infinity;
