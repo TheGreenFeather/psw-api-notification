@@ -1,8 +1,8 @@
 import { initializeApp, applicationDefault } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
 import { SMTPClient } from "emailjs";
-import { json } from "body-parser";
-import express, { json as _json } from "express";
+import bodyParser from "body-parser";
+import express from "express";
 import cors from "cors";
 
 // const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
@@ -24,8 +24,8 @@ const client = new SMTPClient({
 const port = process.env.PORT || 8000;
 const app = express();
 
-app.use(_json());
-app.use(json());
+app.use(express.json());
+app.use(bodyParser.json());
 
 app.use(
   cors({
