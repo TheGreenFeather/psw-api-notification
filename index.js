@@ -1,10 +1,10 @@
-import { initializeApp, applicationDefault } from "firebase-admin/app";
-import admin from "firebase-admin";
-import { getMessaging } from "firebase-admin/messaging";
-import { SMTPClient } from "emailjs";
-import bodyParser from "body-parser";
-import express from "express";
-import cors from "cors";
+const { initializeApp } = require("firebase-admin/app");
+const admin = require("firebase-admin");
+const { getMessaging } = require("firebase-admin/messaging");
+const { SMTPClient } = require("emailjs");
+const bodyParser = require("body-parser");
+const express = require("express");
+const cors = require("cors");
 
 const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 
