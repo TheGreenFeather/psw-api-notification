@@ -1,5 +1,5 @@
 import { initializeApp, applicationDefault } from "firebase-admin/app";
-import { credential } from "firebase-admin";
+import admin from "firebase-admin";
 import { getMessaging } from "firebase-admin/messaging";
 import { SMTPClient } from "emailjs";
 import bodyParser from "body-parser";
@@ -9,7 +9,7 @@ import cors from "cors";
 const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 
 initializeApp({
-  credential: credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount),
   projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
