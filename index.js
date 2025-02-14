@@ -1,14 +1,15 @@
 import { initializeApp, applicationDefault } from "firebase-admin/app";
+import { credential } from "firebase-admin";
 import { getMessaging } from "firebase-admin/messaging";
 import { SMTPClient } from "emailjs";
 import bodyParser from "body-parser";
 import express from "express";
 import cors from "cors";
 
-process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
 
 initializeApp({
-  credential: applicationDefault(),
+  credential: credential.cert(serviceAccount),
   projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
@@ -48,7 +49,7 @@ app.post("/api/push-notify", function (req, res) {
     notification: {
       title: data.title,
       body: data.body,
-      icon: data.icon,
+      // icon: data.icon,
     },
     token: data.fcmToken,
   };
@@ -60,7 +61,11 @@ app.post("/api/push-notify", function (req, res) {
         message: "Successfully sent push message",
         token: receivedToken,
       });
-      console.log("Successfully sent push message:", response);
+      if(response.failureCount > 0) {
+        console.log("Error sending push message:", response.responses[0].error.message);
+      } else {
+        console.log("Successfully sent push message:", response);
+      }
     })
     .catch((error) => {
       res.status(400).json({ error: error.message });
