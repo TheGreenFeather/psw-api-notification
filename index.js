@@ -45,6 +45,8 @@ app.post("/api/push-notify", function (req, res) {
     return res.status(400).json({ error: "Invalid request body" });
   }
 
+  console.log("Received push notification request:", data.fcmToken);
+
   const message = {
     notification: {
       title: data.title,
