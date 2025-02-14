@@ -1,4 +1,4 @@
-const { initializeApp } = require("firebase-admin/app");
+const { initializeApp, applicationDefault  } = require("firebase-admin/app");
 const admin = require("firebase-admin");
 const { getMessaging } = require("firebase-admin/messaging");
 const { SMTPClient } = require("emailjs");
@@ -6,10 +6,12 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const cors = require("cors");
 
-const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+// const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+
+process.env.GOOGLE_APPLICATION_CREDENTIALS
 
 initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: applicationDefault(),
   projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
