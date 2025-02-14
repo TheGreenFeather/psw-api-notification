@@ -61,7 +61,7 @@ app.post("/api/push-notify", function (req, res) {
     .then((response) => {
       res.status(200).json({
         message: "Successfully sent push message",
-        token: receivedToken,
+        token: data.fcmToken,
       });
       if(response.failureCount > 0) {
         console.log("Error sending push message:", response.responses[0].error.message);
