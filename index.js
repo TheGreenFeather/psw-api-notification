@@ -52,7 +52,7 @@ app.post("/api/push-notify", function (req, res) {
     notification: {
       title: data.title,
       body: data.body,
-      // icon: data.icon,
+      icon: data.icon,
     },
     tokens: data.fcmToken,
   };
