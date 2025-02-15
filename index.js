@@ -52,7 +52,12 @@ app.post("/api/push-notify", function (req, res) {
     notification: {
       title: data.title,
       body: data.body,
-      icon: data.icon,
+      image: data.icon,
+    },
+    webpush: {
+      fcm_options: {
+        link: "https://dummypage.com"
+      }
     },
     tokens: data.fcmToken,
   };
