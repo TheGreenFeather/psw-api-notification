@@ -61,7 +61,7 @@ app.post("/api/push-notify", (req, res) => {
 
 
   getMessaging()
-    .subscribeToTopic(tokens[0], topic)
+    .subscribeToTopic(tokens, topic)
     .then((subscribeResponse) => {
       console.log("Successfully subscribed topic:", subscribeResponse);
       getMessaging()
