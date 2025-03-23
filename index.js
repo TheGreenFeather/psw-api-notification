@@ -6,7 +6,6 @@ import express from "express";
 import cors from "cors";
 // import dotenv from "dotenv"
 
-
 // dotenv.config({ path: '.env' })
 
 // console.log(process.env)
@@ -56,14 +55,18 @@ app.post("/api/push-notify", (req, res) => {
       title: notification.title,
       body: notification.body,
     },
+    webpush: {
+      fcm_options: {
+        link: "http://localhost:5173",
+      },
+    },
     topic: topic,
   };
 
-
-  getMessaging()
-    .subscribeToTopic(tokens, topic)
-    .then((subscribeResponse) => {
-      console.log("Successfully subscribed topic:", subscribeResponse);
+  // getMessaging()
+  //   .subscribeToTopic(tokens, topic)
+  //   .then((subscribeResponse) => {
+  //     console.log("Successfully subscribed topic:", subscribeResponse);
       getMessaging()
         .send(message)
         .then((sendResponse) => {
@@ -77,11 +80,11 @@ app.post("/api/push-notify", (req, res) => {
           console.error("Error sending push message:", error);
           res.status(500).send({ success: false, error });
         });
-    })
-    .catch((error) => {
-      console.error("Error subcribing topic:", error);
-      res.status(500).send({ success: false, error });
-    });
+    // })
+    // .catch((error) => {
+    //   console.error("Error subcribing topic:", error);
+    //   res.status(500).send({ success: false, error });
+    // });
 });
 
 // app.post("/api/push-notify", function (req, res) {
