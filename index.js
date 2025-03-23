@@ -15,7 +15,7 @@ process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 initializeApp({
   credential: applicationDefault(),
-  projectId: process.env.FIREBASE_PROJECT_ID,
+  // projectId: process.env.FIREBASE_PROJECT_ID,
 });
 
 const client = new SMTPClient({
