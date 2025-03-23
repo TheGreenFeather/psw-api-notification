@@ -73,7 +73,7 @@ app.post("/api/push-notify", (req, res) => {
           console.log("Successfully sent push message:", sendResponse);
           res.status(200).send({
             success: true,
-            response: { sendResponse, subscribeResponse },
+            response: { sendResponse },
           });
         })
         .catch((error) => {
