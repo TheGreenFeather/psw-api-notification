@@ -12,10 +12,12 @@ import cors from "cors";
 
 process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-initializeApp({
+const firebaseApp = initializeApp({
   credential: applicationDefault(),
   projectId: process.env.FIREBASE_PROJECT_ID,
 });
+
+const messaging = getMessaging(firebaseApp);
 
 const client = new SMTPClient({
   user: process.env.EMAIL_USER,
@@ -43,10 +45,29 @@ app.use((req, res, next) => {
 });
 
 // Endpoint to send a message to a topic
-app.post("/api/push-notify", (req, res) => {
-  const { tokens, notification, topic } = req.body;
+app.post("/api/subscribe-push-notify", (req, res) => {
+  const { tokens, topic } = req.body;
 
-  if (!tokens || !notification || !topic) {
+  if (!tokens || !topic) {
+    return res.status(400).send({ success: false });
+  }
+
+  messaging
+    .subscribeToTopic(tokens, topic)
+    .then((subscribeResponse) => {
+      console.log("Successfully subscribed topic:", subscribeResponse);
+      res.status(200).send({ success: true, subscribeResponse });
+    })
+    .catch((error) => {
+      console.error("Error subcribing topic:", error);
+      res.status(500).send({ success: false, error });
+    });
+});
+
+app.post("/api/send-push-notify", (req, res) => {
+  const { notification, topic } = req.body;
+
+  if (!notification || !topic) {
     return res.status(400).send({ success: false });
   }
 
@@ -55,79 +76,23 @@ app.post("/api/push-notify", (req, res) => {
       title: notification.title,
       body: notification.body,
     },
-    webpush: {
-      fcm_options: {
-        link: "http://localhost:5173",
-      },
-    },
     topic: topic,
   };
 
-  getMessaging()
-    .subscribeToTopic(tokens, topic)
-    .then((subscribeResponse) => {
-      console.log("Successfully subscribed topic:", subscribeResponse);
-      getMessaging()
-        .send(message)
-        .then((sendResponse) => {
-          console.log("Successfully sent push message:", sendResponse);
-          res.status(200).send({
-            success: true,
-            response: { sendResponse },
-          });
-        })
-        .catch((error) => {
-          console.error("Error sending push message:", error);
-          res.status(500).send({ success: false, error });
-        });
+  messaging
+    .send(message)
+    .then((sendResponse) => {
+      console.log("Successfully sent push message:", sendResponse);
+      res.status(200).send({
+        success: true,
+        response: { sendResponse },
+      });
     })
     .catch((error) => {
-      console.error("Error subcribing topic:", error);
+      console.error("Error sending push message:", error);
       res.status(500).send({ success: false, error });
     });
 });
-
-// app.post("/api/push-notify", function (req, res) {
-//   const data = req.body;
-
-//   if (!data.fcmToken || !data.title || !data.body || !data.icon) {
-//     return res.status(400).json({ error: "Invalid request body" });
-//   }
-
-//   console.log("Received push notification request:", data.fcmToken);
-
-//   const message = {
-//     notification: {
-//       title: data.title,
-//       body: data.body,
-//       image: data.icon,
-//     },
-//     webpush: {
-//       fcm_options: {
-//         link: "https://google.com"
-//       }
-//     },
-//     tokens: data.fcmToken,
-//   };
-
-//   getMessaging()
-//     .sendEachForMulticast(message) // Use send instead of sendEachForMulticast
-//     .then((response) => {
-//       res.status(200).json({
-//         message: "Successfully sent push message",
-//         token: data.fcmToken,
-//       });
-//       if(response.failureCount > 0) {
-//         console.log("Error sending push message:", response.responses[0].error.message);
-//       } else {
-//         console.log("Successfully sent push message:", response);
-//       }
-//     })
-//     .catch((error) => {
-//       res.status(400).json({ error: error.message });
-//       console.log("Error sending push message:", error);
-//     });
-// });
 
 app.post("/api/email-notify", function (req, res) {
   const { text, from, to, subject } = req.body;
