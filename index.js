@@ -14,7 +14,7 @@ process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 const firebaseApp = initializeApp({
   credential: applicationDefault(),
-  projectId: process.env.FIREBASE_PROJECT_ID,
+  databaseURL: "https://g-edu-4c960-default-rtdb.asia-southeast1.firebasedatabase.app"
 });
 
 const messaging = getMessaging(firebaseApp);
