@@ -1,9 +1,11 @@
 import { initializeApp, applicationDefault } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import { SMTPClient } from "emailjs";
 import bodyParser from "body-parser";
 import express from "express";
 import cors from "cors";
+import cron from "node-cron";
 // import dotenv from "dotenv"
 
 // dotenv.config({ path: '.env' })
@@ -18,6 +20,7 @@ const firebaseApp = initializeApp({
 });
 
 const messaging = getMessaging(firebaseApp);
+const db = getFirestore(firebaseApp);
 
 const client = new SMTPClient({
   user: process.env.EMAIL_USER,
@@ -124,6 +127,307 @@ app.post("/api/email-notify", function (req, res) {
     }
   });
 });
+
+app.post("/api/setschedule-assignment", async function (req, res) {
+  const { from, student_ids, assignment_id } = req.body;
+
+  if (!from || !student_ids || !deadline || !assignment_id) {
+    return res.status(400).send({ success: false });
+  }
+
+  const message = (content, from, subject, to) => ({
+    text: content,
+    from: from,
+    to: to,
+    subject: subject,
+    attachment: [
+      {
+        data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://g.edu.com" style="color: white">https://g.edu.com</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
+        alternative: true,
+      },
+    ],
+  });
+
+  const assignmentRef = db.collection("assignments").doc(assignment_id);
+  const assignmentDoc = await assignmentRef.get();
+  if (!assignmentDoc.exists) {
+    console.log("Assignment not found");
+    res.status(404).send({ success: false, message: "Assignment not found" });
+    return;
+  }
+
+  const assignmentData = assignmentDoc.data();
+  const deadline = assignmentData.deadline;
+  const assignmentName = assignmentData.name;
+
+  res.status(200).send({ success: true });
+
+  const threeDaysBefore = new Date(deadline);
+  threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
+
+  const oneDayBefore = new Date(deadline);
+  oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+
+  const deadlineDate = new Date(deadline);
+
+  const cronSchedule3 = `${threeDaysBefore.getMinutes()} ${threeDaysBefore.getHours()} ${threeDaysBefore.getDate()} ${
+    threeDaysBefore.getMonth() + 1
+  } *`;
+  const cronSchedule1 = `${oneDayBefore.getMinutes()} ${oneDayBefore.getHours()} ${oneDayBefore.getDate()} ${
+    oneDayBefore.getMonth() + 1
+  } *`;
+
+  const cronSchedule0 = `${deadlineDate.getMinutes()} ${deadlineDate.getHours()} ${deadlineDate.getDate()} ${
+    deadlineDate.getMonth() + 1
+  } *`;
+
+  cron.schedule(cronSchedule3, async () => {
+    const submissionsQuery = db
+      .collection("submissions")
+      .where("student_id", "in", student_ids)
+      .where("assignment_id", "==", assignment_id);
+    const submissionsSnapshot = await submissionsQuery.get();
+
+    const studentsFinishSubmission = submissionsSnapshot.empty
+      ? []
+      : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+    const studentsNotFinishSubmission = student_ids.filter(
+      (student_id) => !studentsFinishSubmission.includes(student_id)
+    );
+
+    if (studentsNotFinishSubmission.length === 0) {
+      console.log("All students have finished their submission");
+      cronSchedule3.stop();
+      return;
+    }
+
+    const studentsQuery = db
+      .collection("students")
+      .where("student_id", "in", studentsNotFinishSubmission);
+    const studentsSnapshot = await studentsQuery.get();
+
+    const studentsEmail = studentsSnapshot.empty
+      ? []
+      : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+    console.log("Sending email 3 days before deadline");
+    client.send(
+      message(
+        `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+        from,
+        `Late assignment "${assignmentName}"`,
+        studentsEmail.map((email) => `<${email}>`).join(", ")
+      ),
+      (error, messageInfo) => {
+        if (error) {
+          console.log("Error sending email message:", error);
+        } else {
+          console.log("Successfully sent email message:", messageInfo);
+        }
+      }
+    );
+    cronSchedule3.stop();
+  });
+
+  cron.schedule(cronSchedule1, async () => {
+    const submissionsQuery = db
+      .collection("submissions")
+      .where("student_id", "in", student_ids)
+      .where("assignment_id", "==", assignment_id);
+    const submissionsSnapshot = await submissionsQuery.get();
+
+    const studentsFinishSubmission = submissionsSnapshot.empty
+      ? []
+      : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+    const studentsNotFinishSubmission = student_ids.filter(
+      (student_id) => !studentsFinishSubmission.includes(student_id)
+    );
+
+    if (studentsNotFinishSubmission.length === 0) {
+      console.log("All students have finished their submission");
+      cronSchedule1.stop();
+      return;
+    }
+
+    const studentsQuery = db
+      .collection("students")
+      .where("student_id", "in", studentsNotFinishSubmission);
+    const studentsSnapshot = await studentsQuery.get();
+
+    const studentsEmail = studentsSnapshot.empty
+      ? []
+      : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+    console.log("Sending email 1 day before deadline");
+
+    client.send(
+      message(
+        `Hey, \n\n You have 1 day left to finish your assignment "${assignmentName}".`,
+        from,
+        `Late assignment "${assignmentName}"`,
+        studentsEmail.map((email) => `<${email}>`).join(", ")
+      ),
+      (error, messageInfo) => {
+        if (error) {
+          console.log("Error sending email message:", error);
+        } else {
+          console.log("Successfully sent email message:", messageInfo);
+        }
+      }
+    );
+    cronSchedule1.stop();
+  });
+
+  cron.schedule(cronSchedule0, async () => {
+    const submissionsQuery = db
+      .collection("submissions")
+      .where("student_id", "in", student_ids)
+      .where("assignment_id", "==", assignment_id);
+    const submissionsSnapshot = await submissionsQuery.get();
+
+    const studentsFinishSubmission = submissionsSnapshot.empty
+      ? []
+      : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+    const studentsNotFinishSubmission = student_ids.filter(
+      (student_id) => !studentsFinishSubmission.includes(student_id)
+    );
+
+    if (studentsNotFinishSubmission.length === 0) {
+      console.log("All students have finished their submission");
+      cronSchedule0.stop();
+      return;
+    }
+
+    const studentsQuery = db
+      .collection("students")
+      .where("student_id", "in", studentsNotFinishSubmission);
+    const studentsSnapshot = await studentsQuery.get();
+
+    const parentsEmail = studentsSnapshot.empty
+      ? []
+      : studentsSnapshot.docs.map((doc) => doc.data().parent_email);
+
+    console.log("Sending email on deadline");
+
+    client.send(
+      message(
+        `Dear parents,\n\n Your child has missed the assignment "${assignmentName}".`,
+        from,
+        `Late assignment "${assignmentName}"`,
+        parentsEmail.map((email) => `<${email}>`).join(", ")
+      ),
+      (error, messageInfo) => {
+        if (error) {
+          console.log("Error sending email message:", error);
+        } else {
+          console.log("Successfully sent email message:", messageInfo);
+        }
+      }
+    );
+    cronSchedule0.stop();
+  });
+});
+
+app.get("/api/setschedule-newstudent", async function (req, res) {
+  const { from, student_id } = req.body;
+
+  if (!from || !student_ids) {
+    return res.status(400).send({ success: false });
+  }
+
+  const message = (content, from, subject, to) => ({
+    text: content,
+    from: from,
+    to: to,
+    subject: subject,
+    attachment: [
+      {
+        data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://g.edu.com" style="color: white">https://g.edu.com</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
+        alternative: true,
+      },
+    ],
+  });
+
+  const studentRef = db.collection("students").doc(student_id);
+  const studentDoc = await studentRef.get();
+  if (!studentDoc.exists) {
+    console.log("Student not found");
+    res.status(404).send({ success: false, message: "Student not found" });
+    return;
+  }
+  const studentData = studentDoc.data();
+
+  const learningPlanRef = db.collection("learning_plans").doc(student_id);
+  const learningPlanDoc = await learningPlanRef.get();
+  if (!learningPlanDoc.exists) {
+    console.log("Learning plan not found");
+    res.status(404).send({
+      success: false,
+      message: "Learning plan not found",
+    });
+    return;
+  }
+  const learningPlanData = learningPlanDoc.data();
+
+  res.status(200).send({ success: true });
+
+  const studentEmail = studentData.email;
+  const studyTimeStart = learningPlanData.study_time?.start;
+
+  const fithteenMinutes = studyTimeStart
+    .split(":")
+    .map((item) => parseInt(item));
+  fithteenMinutes[1] += 15;
+  if (fithteenMinutes[1] >= 60) {
+    fithteenMinutes[1] %= 60;
+    fithteenMinutes[0] += 1;
+  }
+  if (fithteenMinutes[0] >= 24) {
+    fithteenMinutes[0] %= 24;
+  }
+
+  cron.schedule(
+    `${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`,
+    async () => {
+      const learningPlanRef = db.collection("learning_plans").doc(student_id);
+      const learningPlanDoc = await learningPlanRef.get();
+      if (!learningPlanDoc.exists) {
+        console.log("Learning plan not found");
+        res.status(404).send({
+          success: false,
+          message: "Learning plan not found",
+        });
+        return;
+      }
+      const learningPlanData = learningPlanDoc.data();
+
+      const studyHours = learningPlanData.study_hours;
+      const studyHourCurrent = studyHours[studyHours.length - 1];
+
+      if (studyHourCurrent > 0) {
+        console.log("Student has started study hour");
+        return;
+      }
+
+      client.send(
+        message(
+          `Hey, \n\n You have late 15 minutes to start your study hour. \n\n Please check your schedule and start your study hour.`,
+          from,
+          `Late study hour`,
+          `<${studentEmail}>`
+        ),
+        (error, messageInfo) => {
+          if (error) {
+            console.log("Error sending email message:", error);
+          } else {
+            console.log("Successfully sent email message:", messageInfo);
+          }
+        }
+      );
+    }
+  );
+});
+
 
 const server = app.listen(port, function () {
   console.log(`Server listening on port ${port}`);
