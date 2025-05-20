@@ -215,7 +215,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
       message(
         `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
         from,
-        `Late assignment "${assignmentName}"`,
+        `3 day lefts before the deadline of assignment "${assignmentName}"`,
         studentsEmail.map((email) => `<${email}>`).join(", ")
       ),
       (error, messageInfo) => {
@@ -264,7 +264,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
       message(
         `Hey, \n\n You have 1 day left to finish your assignment "${assignmentName}".`,
         from,
-        `Late assignment "${assignmentName}"`,
+        `1 day left before the deadline of assignment "${assignmentName}"`,
         studentsEmail.map((email) => `<${email}>`).join(", ")
       ),
       (error, messageInfo) => {
@@ -307,7 +307,31 @@ app.post("/api/setschedule-assignment", async function (req, res) {
       ? []
       : studentsSnapshot.docs.map((doc) => doc.data().parent_email);
 
+    const studentsEmail = studentsSnapshot.empty
+      ? []
+      : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+    const studentsName = studentsSnapshot.empty
+      ? []
+      : studentsSnapshot.docs.map((doc) => doc.data().name)
+
     console.log("Sending email on deadline");
+
+    client.send(
+      message(
+        `Hey, \n\n You have missed your assignment "${assignmentName}".`,
+        from,
+        `Late assignment "${assignmentName}"`,
+        studentsEmail.map((email) => `<${email}>`).join(", ")
+      ),
+      (error, messageInfo) => {
+        if (error) {
+          console.log("Error sending email message:", error);
+        } else {
+          console.log("Successfully sent email message:", messageInfo);
+        }
+      }
+    );
 
     client.send(
       message(
@@ -315,6 +339,22 @@ app.post("/api/setschedule-assignment", async function (req, res) {
         from,
         `Late assignment "${assignmentName}"`,
         parentsEmail.map((email) => `<${email}>`).join(", ")
+      ),
+      (error, messageInfo) => {
+        if (error) {
+          console.log("Error sending email message:", error);
+        } else {
+          console.log("Successfully sent email message:", messageInfo);
+        }
+      }
+    );
+
+    client.send(
+      message(
+        `${studentsName.join(', ')} have just missed this asignment.`,
+        from,
+        `Assignment "${assignmentName}" has just been overdue.`,
+        from
       ),
       (error, messageInfo) => {
         if (error) {
