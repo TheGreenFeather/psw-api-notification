@@ -165,11 +165,14 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
   const threeDaysBefore = new Date(deadline);
   threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
+  threeDaysBefore.setHours(18, 30, 0, 0); // Set to 6:30 PM
 
   const oneDayBefore = new Date(deadline);
   oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+  oneDayBefore.setHours(18, 30, 0, 0); // Set to 6:30 PM
 
   const deadlineDate = new Date(deadline);
+  deadlineDate.setHours(18, 30, 0, 0); // Set to 6:30 PM
 
   const schedule3 = `${threeDaysBefore.getMinutes()} ${threeDaysBefore.getHours()} ${threeDaysBefore.getDate()} ${
     threeDaysBefore.getMonth() + 1
