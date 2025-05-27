@@ -161,8 +161,6 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   const deadline = assignmentData.deadline;
   const assignmentName = assignmentData.name;
 
-  res.status(200).send({ success: true });
-
   const threeDaysBefore = new Date(deadline);
   threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
 
@@ -205,6 +203,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
       message: "Deadline has already passed",
     });
   }
+
+  res.status(200).send({ success: true });
 
   const cronSchedule3 = cron.schedule(
     schedule3,
