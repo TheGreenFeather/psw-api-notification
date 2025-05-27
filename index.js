@@ -161,6 +161,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   const deadline = assignmentData.deadline;
   const assignmentName = assignmentData.name;
 
+  res.status(200).send({ success: true });
+
   const threeDaysBefore = new Date(deadline);
   threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
 
@@ -182,228 +184,215 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
   // Check if schedules are past
   const now = new Date();
+
   if (threeDaysBefore < now) {
     console.log("3 days before deadline has already passed");
-    return res.status(400).send({
-      success: false,
-      message: "3 days before deadline has already passed",
-    });
+  } else {
+    const cronSchedule3 = cron.schedule(
+      schedule3,
+      async () => {
+        const submissionsQuery = db
+          .collection("submissions")
+          .where("student_id", "in", student_ids)
+          .where("assignment_id", "==", assignment_id);
+        const submissionsSnapshot = await submissionsQuery.get();
+
+        const studentsFinishSubmission = submissionsSnapshot.empty
+          ? []
+          : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+        const studentsNotFinishSubmission = student_ids.filter(
+          (student_id) => !studentsFinishSubmission.includes(student_id)
+        );
+
+        if (studentsNotFinishSubmission.length === 0) {
+          console.log("All students have finished their submission");
+          cronSchedule3.stop();
+          return;
+        }
+
+        const studentsQuery = db
+          .collection("students")
+          .where("student_id", "in", studentsNotFinishSubmission);
+        const studentsSnapshot = await studentsQuery.get();
+
+        const studentsEmail = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+        console.log("Sending email 3 days before deadline");
+        client.send(
+          message(
+            `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+            from,
+            `3 day lefts before the deadline of assignment "${assignmentName}"`,
+            studentsEmail.map((email) => `<${email}>`).join(", ")
+          ),
+          (error, messageInfo) => {
+            if (error) {
+              console.log("Error sending email message:", error);
+            } else {
+              console.log("Successfully sent email message:", messageInfo);
+            }
+          }
+        );
+        cronSchedule3.stop();
+      },
+      { timezone: "Asia/Bangkok" }
+    );
   }
   if (oneDayBefore < now) {
     console.log("1 day before deadline has already passed");
-    return res.status(400).send({
-      success: false,
-      message: "1 day before deadline has already passed",
-    });
+  } else {
+    const cronSchedule1 = cron.schedule(
+      schedule1,
+      async () => {
+        const submissionsQuery = db
+          .collection("submissions")
+          .where("student_id", "in", student_ids)
+          .where("assignment_id", "==", assignment_id);
+        const submissionsSnapshot = await submissionsQuery.get();
+
+        const studentsFinishSubmission = submissionsSnapshot.empty
+          ? []
+          : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+        const studentsNotFinishSubmission = student_ids.filter(
+          (student_id) => !studentsFinishSubmission.includes(student_id)
+        );
+
+        if (studentsNotFinishSubmission.length === 0) {
+          console.log("All students have finished their submission");
+          cronSchedule1.stop();
+          return;
+        }
+
+        const studentsQuery = db
+          .collection("students")
+          .where("student_id", "in", studentsNotFinishSubmission);
+        const studentsSnapshot = await studentsQuery.get();
+
+        const studentsEmail = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+        console.log("Sending email 1 day before deadline");
+
+        client.send(
+          message(
+            `Hey, \n\n You have 1 day left to finish your assignment "${assignmentName}".`,
+            from,
+            `1 day left before the deadline of assignment "${assignmentName}"`,
+            studentsEmail.map((email) => `<${email}>`).join(", ")
+          ),
+          (error, messageInfo) => {
+            if (error) {
+              console.log("Error sending email message:", error);
+            } else {
+              console.log("Successfully sent email message:", messageInfo);
+            }
+          }
+        );
+        cronSchedule1.stop();
+      },
+      { timezone: "Asia/Bangkok" }
+    );
   }
+
   if (deadlineDate < now) {
     console.log("Deadline has already passed");
-    return res.status(400).send({
-      success: false,
-      message: "Deadline has already passed",
-    });
-  }
+  } else {
+    const cronSchedule0 = cron.schedule(
+      schedule0,
+      async () => {
+        const submissionsQuery = db
+          .collection("submissions")
+          .where("student_id", "in", student_ids)
+          .where("assignment_id", "==", assignment_id);
+        const submissionsSnapshot = await submissionsQuery.get();
 
-  res.status(200).send({ success: true });
+        const studentsFinishSubmission = submissionsSnapshot.empty
+          ? []
+          : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+        const studentsNotFinishSubmission = student_ids.filter(
+          (student_id) => !studentsFinishSubmission.includes(student_id)
+        );
 
-  const cronSchedule3 = cron.schedule(
-    schedule3,
-    async () => {
-      const submissionsQuery = db
-        .collection("submissions")
-        .where("student_id", "in", student_ids)
-        .where("assignment_id", "==", assignment_id);
-      const submissionsSnapshot = await submissionsQuery.get();
-
-      const studentsFinishSubmission = submissionsSnapshot.empty
-        ? []
-        : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
-      const studentsNotFinishSubmission = student_ids.filter(
-        (student_id) => !studentsFinishSubmission.includes(student_id)
-      );
-
-      if (studentsNotFinishSubmission.length === 0) {
-        console.log("All students have finished their submission");
-        cronSchedule3.stop();
-        return;
-      }
-
-      const studentsQuery = db
-        .collection("students")
-        .where("student_id", "in", studentsNotFinishSubmission);
-      const studentsSnapshot = await studentsQuery.get();
-
-      const studentsEmail = studentsSnapshot.empty
-        ? []
-        : studentsSnapshot.docs.map((doc) => doc.data().email);
-
-      console.log("Sending email 3 days before deadline");
-      client.send(
-        message(
-          `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
-          from,
-          `3 day lefts before the deadline of assignment "${assignmentName}"`,
-          studentsEmail.map((email) => `<${email}>`).join(", ")
-        ),
-        (error, messageInfo) => {
-          if (error) {
-            console.log("Error sending email message:", error);
-          } else {
-            console.log("Successfully sent email message:", messageInfo);
-          }
+        if (studentsNotFinishSubmission.length === 0) {
+          console.log("All students have finished their submission");
+          cronSchedule0.stop();
+          return;
         }
-      );
-      cronSchedule3.stop();
-    },
-    { timezone: "Asia/Bangkok" }
-  );
 
-  const cronSchedule1 = cron.schedule(
-    schedule1,
-    async () => {
-      const submissionsQuery = db
-        .collection("submissions")
-        .where("student_id", "in", student_ids)
-        .where("assignment_id", "==", assignment_id);
-      const submissionsSnapshot = await submissionsQuery.get();
+        const studentsQuery = db
+          .collection("students")
+          .where("student_id", "in", studentsNotFinishSubmission);
+        const studentsSnapshot = await studentsQuery.get();
 
-      const studentsFinishSubmission = submissionsSnapshot.empty
-        ? []
-        : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
-      const studentsNotFinishSubmission = student_ids.filter(
-        (student_id) => !studentsFinishSubmission.includes(student_id)
-      );
+        const parentsEmail = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().parent_email);
 
-      if (studentsNotFinishSubmission.length === 0) {
-        console.log("All students have finished their submission");
-        cronSchedule1.stop();
-        return;
-      }
+        const studentsEmail = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().email);
 
-      const studentsQuery = db
-        .collection("students")
-        .where("student_id", "in", studentsNotFinishSubmission);
-      const studentsSnapshot = await studentsQuery.get();
+        const studentsName = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().name);
 
-      const studentsEmail = studentsSnapshot.empty
-        ? []
-        : studentsSnapshot.docs.map((doc) => doc.data().email);
+        console.log("Sending email on deadline");
 
-      console.log("Sending email 1 day before deadline");
-
-      client.send(
-        message(
-          `Hey, \n\n You have 1 day left to finish your assignment "${assignmentName}".`,
-          from,
-          `1 day left before the deadline of assignment "${assignmentName}"`,
-          studentsEmail.map((email) => `<${email}>`).join(", ")
-        ),
-        (error, messageInfo) => {
-          if (error) {
-            console.log("Error sending email message:", error);
-          } else {
-            console.log("Successfully sent email message:", messageInfo);
+        client.send(
+          message(
+            `Hey, \n\n You have missed your assignment "${assignmentName}".`,
+            from,
+            `Late assignment "${assignmentName}"`,
+            studentsEmail.map((email) => `<${email}>`).join(", ")
+          ),
+          (error, messageInfo) => {
+            if (error) {
+              console.log("Error sending email message:", error);
+            } else {
+              console.log("Successfully sent email message:", messageInfo);
+            }
           }
-        }
-      );
-      cronSchedule1.stop();
-    },
-    { timezone: "Asia/Bangkok" }
-  );
+        );
 
-  const cronSchedule0 = cron.schedule(
-    schedule0,
-    async () => {
-      const submissionsQuery = db
-        .collection("submissions")
-        .where("student_id", "in", student_ids)
-        .where("assignment_id", "==", assignment_id);
-      const submissionsSnapshot = await submissionsQuery.get();
+        client.send(
+          message(
+            `Dear parents,\n\n Your child has missed the assignment "${assignmentName}".`,
+            from,
+            `Late assignment "${assignmentName}"`,
+            parentsEmail.map((email) => `<${email}>`).join(", ")
+          ),
+          (error, messageInfo) => {
+            if (error) {
+              console.log("Error sending email message:", error);
+            } else {
+              console.log("Successfully sent email message:", messageInfo);
+            }
+          }
+        );
 
-      const studentsFinishSubmission = submissionsSnapshot.empty
-        ? []
-        : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
-      const studentsNotFinishSubmission = student_ids.filter(
-        (student_id) => !studentsFinishSubmission.includes(student_id)
-      );
-
-      if (studentsNotFinishSubmission.length === 0) {
-        console.log("All students have finished their submission");
+        client.send(
+          message(
+            `${studentsName.join(", ")} have just missed this asignment.`,
+            from,
+            `Assignment "${assignmentName}" has just been overdue.`,
+            from
+          ),
+          (error, messageInfo) => {
+            if (error) {
+              console.log("Error sending email message:", error);
+            } else {
+              console.log("Successfully sent email message:", messageInfo);
+            }
+          }
+        );
         cronSchedule0.stop();
-        return;
-      }
-
-      const studentsQuery = db
-        .collection("students")
-        .where("student_id", "in", studentsNotFinishSubmission);
-      const studentsSnapshot = await studentsQuery.get();
-
-      const parentsEmail = studentsSnapshot.empty
-        ? []
-        : studentsSnapshot.docs.map((doc) => doc.data().parent_email);
-
-      const studentsEmail = studentsSnapshot.empty
-        ? []
-        : studentsSnapshot.docs.map((doc) => doc.data().email);
-
-      const studentsName = studentsSnapshot.empty
-        ? []
-        : studentsSnapshot.docs.map((doc) => doc.data().name);
-
-      console.log("Sending email on deadline");
-
-      client.send(
-        message(
-          `Hey, \n\n You have missed your assignment "${assignmentName}".`,
-          from,
-          `Late assignment "${assignmentName}"`,
-          studentsEmail.map((email) => `<${email}>`).join(", ")
-        ),
-        (error, messageInfo) => {
-          if (error) {
-            console.log("Error sending email message:", error);
-          } else {
-            console.log("Successfully sent email message:", messageInfo);
-          }
-        }
-      );
-
-      client.send(
-        message(
-          `Dear parents,\n\n Your child has missed the assignment "${assignmentName}".`,
-          from,
-          `Late assignment "${assignmentName}"`,
-          parentsEmail.map((email) => `<${email}>`).join(", ")
-        ),
-        (error, messageInfo) => {
-          if (error) {
-            console.log("Error sending email message:", error);
-          } else {
-            console.log("Successfully sent email message:", messageInfo);
-          }
-        }
-      );
-
-      client.send(
-        message(
-          `${studentsName.join(", ")} have just missed this asignment.`,
-          from,
-          `Assignment "${assignmentName}" has just been overdue.`,
-          from
-        ),
-        (error, messageInfo) => {
-          if (error) {
-            console.log("Error sending email message:", error);
-          } else {
-            console.log("Successfully sent email message:", messageInfo);
-          }
-        }
-      );
-      cronSchedule0.stop();
-    },
-    { timezone: "Asia/Bangkok" }
-  );
-  
+      },
+      { timezone: "Asia/Bangkok" }
+    );
+  }
 });
 
 app.get("/api/setschedule-newstudent", async function (req, res) {
