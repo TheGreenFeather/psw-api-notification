@@ -132,7 +132,7 @@ app.post("/api/email-notify", function (req, res) {
 app.post("/api/setschedule-assignment", async function (req, res) {
   const { from, student_ids, assignment_id } = req.body;
 
-  if (!from || !student_ids || !deadline || !assignment_id) {
+  if (!from || !student_ids || !assignment_id) {
     return res.status(400).send({ success: false });
   }
 
@@ -171,19 +171,43 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
   const deadlineDate = new Date(deadline);
 
-  const cronSchedule3 = `${threeDaysBefore.getMinutes()} ${threeDaysBefore.getHours()} ${threeDaysBefore.getDate()} ${
+  const schedule3 = `${threeDaysBefore.getMinutes()} ${threeDaysBefore.getHours()} ${threeDaysBefore.getDate()} ${
     threeDaysBefore.getMonth() + 1
   } *`;
-  const cronSchedule1 = `${oneDayBefore.getMinutes()} ${oneDayBefore.getHours()} ${oneDayBefore.getDate()} ${
+  const schedule1 = `${oneDayBefore.getMinutes()} ${oneDayBefore.getHours()} ${oneDayBefore.getDate()} ${
     oneDayBefore.getMonth() + 1
   } *`;
 
-  const cronSchedule0 = `${deadlineDate.getMinutes()} ${deadlineDate.getHours()} ${deadlineDate.getDate()} ${
+  const schedule0 = `${deadlineDate.getMinutes()} ${deadlineDate.getHours()} ${deadlineDate.getDate()} ${
     deadlineDate.getMonth() + 1
   } *`;
 
-  cron.schedule(
-    cronSchedule3,
+  // Check if schedules are past
+  const now = new Date();
+  if (threeDaysBefore < now) {
+    console.log("3 days before deadline has already passed");
+    return res.status(400).send({
+      success: false,
+      message: "3 days before deadline has already passed",
+    });
+  }
+  if (oneDayBefore < now) {
+    console.log("1 day before deadline has already passed");
+    return res.status(400).send({
+      success: false,
+      message: "1 day before deadline has already passed",
+    });
+  }
+  if (deadlineDate < now) {
+    console.log("Deadline has already passed");
+    return res.status(400).send({
+      success: false,
+      message: "Deadline has already passed",
+    });
+  }
+
+  const cronSchedule3 = cron.schedule(
+    schedule3,
     async () => {
       const submissionsQuery = db
         .collection("submissions")
@@ -234,8 +258,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
     { timezone: "Asia/Bangkok" }
   );
 
-  cron.schedule(
-    cronSchedule1,
+  const cronSchedule1 = cron.schedule(
+    schedule1,
     async () => {
       const submissionsQuery = db
         .collection("submissions")
@@ -287,8 +311,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
     { timezone: "Asia/Bangkok" }
   );
 
-  cron.schedule(
-    cronSchedule0,
+  const cronSchedule0 = cron.schedule(
+    schedule0,
     async () => {
       const submissionsQuery = db
         .collection("submissions")
@@ -379,12 +403,13 @@ app.post("/api/setschedule-assignment", async function (req, res) {
     },
     { timezone: "Asia/Bangkok" }
   );
+  
 });
 
 app.get("/api/setschedule-newstudent", async function (req, res) {
   const { from, student_id } = req.body;
 
-  if (!from || !student_ids) {
+  if (!from || !student_id) {
     return res.status(400).send({ success: false });
   }
 
