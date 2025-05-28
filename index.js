@@ -222,7 +222,45 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           ? []
           : studentsSnapshot.docs.map((doc) => doc.data().email);
 
-        console.log("Sending email 3 days before deadline");
+        const studentsId = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().student_id);
+
+        console.log("Sending notification 3 days before deadline");
+
+        db.runTransaction(async (transaction) => {
+          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocSnap = await transaction.get(indexDocRef);
+
+          let lastIndex = 0;
+          if (indexDocSnap.exists()) {
+            lastIndex = indexDocSnap.data().last_index;
+          }
+
+          const newIndex = lastIndex + 1;
+          const newId = `notifid_${newIndex}`;
+          const docRef = doc(db, "notifications", newId);
+
+          transaction.set(
+            indexDocRef,
+            { last_index: newIndex },
+            { merge: true }
+          );
+
+          transaction.set(docRef, {
+            teacher_id: null,
+            student_ids: studentsId,
+            title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
+            description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+            link: `/card-detail?id=${assignment_id}`,
+            time_sent: new Date().toISOString(),
+            notification_id: newId,
+          });
+
+          console.log("Notifications added successfully with ID:", newId);
+          return newId;
+        });
+
         client.send(
           message(
             `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
@@ -277,7 +315,45 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           ? []
           : studentsSnapshot.docs.map((doc) => doc.data().email);
 
-        console.log("Sending email 1 day before deadline");
+        const studentsId = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().student_id);
+
+        console.log("Sending notification 1 days before deadline");
+
+        db.runTransaction(async (transaction) => {
+          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocSnap = await transaction.get(indexDocRef);
+
+          let lastIndex = 0;
+          if (indexDocSnap.exists()) {
+            lastIndex = indexDocSnap.data().last_index;
+          }
+
+          const newIndex = lastIndex + 1;
+          const newId = `notifid_${newIndex}`;
+          const docRef = doc(db, "notifications", newId);
+
+          transaction.set(
+            indexDocRef,
+            { last_index: newIndex },
+            { merge: true }
+          );
+
+          transaction.set(docRef, {
+            teacher_id: null,
+            student_ids: studentsId,
+            title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
+            description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+            link: `/card-detail?id=${assignment_id}`,
+            time_sent: new Date().toISOString(),
+            notification_id: newId,
+          });
+
+          console.log("Notifications added successfully with ID:", newId);
+          return newId;
+        });
+
 
         client.send(
           message(
@@ -342,7 +418,77 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           ? []
           : studentsSnapshot.docs.map((doc) => doc.data().name);
 
-        console.log("Sending email on deadline");
+        const studentsId = studentsSnapshot.empty
+          ? []
+          : studentsSnapshot.docs.map((doc) => doc.data().student_id);
+
+        console.log("Sending notification on deadline");
+
+        db.runTransaction(async (transaction) => {
+          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocSnap = await transaction.get(indexDocRef);
+
+          let lastIndex = 0;
+          if (indexDocSnap.exists()) {
+            lastIndex = indexDocSnap.data().last_index;
+          }
+
+          const newIndex = lastIndex + 1;
+          const newId = `notifid_${newIndex}`;
+          const docRef = doc(db, "notifications", newId);
+
+          transaction.set(
+            indexDocRef,
+            { last_index: newIndex },
+            { merge: true }
+          );
+
+          transaction.set(docRef, {
+            teacher_id: null,
+            student_ids: studentsId,
+            title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
+            description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+            link: `/card-detail?id=${assignment_id}`,
+            time_sent: new Date().toISOString(),
+            notification_id: newId,
+          });
+
+          console.log("Notifications added successfully with ID:", newId);
+          return newId;
+        });
+
+        db.runTransaction(async (transaction) => {
+          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocSnap = await transaction.get(indexDocRef);
+
+          let lastIndex = 0;
+          if (indexDocSnap.exists()) {
+            lastIndex = indexDocSnap.data().last_index;
+          }
+
+          const newIndex = lastIndex + 1;
+          const newId = `notifid_${newIndex}`;
+          const docRef = doc(db, "notifications", newId);
+
+          transaction.set(
+            indexDocRef,
+            { last_index: newIndex },
+            { merge: true }
+          );
+
+          transaction.set(docRef, {
+            teacher_id: 'tid_1',
+            student_ids: null,
+            title: `Assignment "${assignmentName}" has just been overdue.`,
+            description: `${studentsName.join(", ")} have just missed this asignment.`,
+            link: `${assignment_id}`,
+            time_sent: new Date().toISOString(),
+            notification_id: newId,
+          });
+
+          console.log("Notifications added successfully with ID:", newId);
+          return newId;
+        });
 
         client.send(
           message(
