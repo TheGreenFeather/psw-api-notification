@@ -35,6 +35,7 @@ const app = express();
 
 let assignmentSchedules = {};
 let preferredSchedules = {};
+let suggestedSchedules = {};
 
 app.use(express.json());
 app.use(bodyParser.json());
@@ -230,7 +231,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
         if (studentsNotFinishSubmission.length === 0) {
           console.log("All students have finished their submission");
-          cronSchedule3.stop();
+          assignmentSchedules[assignment_id][2].stop();
+          assignmentSchedules[assignment_id][2] = undefined;
           return;
         }
 
@@ -262,7 +264,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
           const newIndex = lastIndex + 1;
           const newId = `notifid_${newIndex}`;
-          const docRef = doc(db, "notifications", newId);
+          const docRef = db.collection("notifications").doc(newId);
 
           transaction.set(
             indexDocRef,
@@ -326,7 +328,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
         if (studentsNotFinishSubmission.length === 0) {
           console.log("All students have finished their submission");
-          cronSchedule1.stop();
+          assignmentSchedules[assignment_id][1].stop();
+          assignmentSchedules[assignment_id][1] = undefined;
           return;
         }
 
@@ -358,7 +361,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
           const newIndex = lastIndex + 1;
           const newId = `notifid_${newIndex}`;
-          const docRef = doc(db, "notifications", newId);
+          const docRef = db.collection("notifications").doc(newId);
 
           transaction.set(
             indexDocRef,
@@ -423,7 +426,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
         if (studentsNotFinishSubmission.length === 0) {
           console.log("All students have finished their submission");
-          cronSchedule0.stop();
+          assignmentSchedules[assignment_id][0].stop();
+          assignmentSchedules[assignment_id][0] = undefined;
           return;
         }
 
@@ -463,7 +467,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
           const newIndex = lastIndex + 1;
           const newId = `notifid_${newIndex}`;
-          const docRef = doc(db, "notifications", newId);
+          const docRef = db.collection("notifications").doc(newId);
 
           transaction.set(
             indexDocRef,
@@ -498,7 +502,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
 
           const newIndex = lastIndex + 1;
           const newId = `notifid_${newIndex}`;
-          const docRef = doc(db, "notifications", newId);
+          const docRef = db.collection("notifications").doc(newId);
 
           transaction.set(
             indexDocRef,
@@ -665,7 +669,7 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
 
         const newIndex = lastIndex + 1;
         const newId = `notifid_${newIndex}`;
-        const docRef = doc(db, "notifications", newId);
+        const docRef = db.collection("notifications").doc(newId);
 
         transaction.set(indexDocRef, { last_index: newIndex }, { merge: true });
 
@@ -701,6 +705,42 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
     },
     { timezone: "Asia/Bangkok" }
   );
+
+  if (!suggestedSchedules[student_id])
+    suggestedSchedules[student_id] = cron.schedule(
+      "0 6 * * *",
+      async () => {
+        const learningPlanRef = db.collection("learning_plans").doc(student_id);
+        const learningPlanDoc = await learningPlanRef.get();
+        if (!learningPlanDoc.exists) return;
+
+        const learningPlanData = learningPlanDoc.data();
+
+        const currentDate = new Date();
+        const examTime = new Date(learningPlanData.exam_date);
+
+        const millisecondsPerDay = 1000 * 60 * 60 * 24;
+        const remainingDays = Math.ceil(
+          (examTime - currentDate) / millisecondsPerDay
+        );
+        const hoursNeeded =
+          0.3 *
+          (learningPlanData.target_score - learningPlanData.initial_score);
+
+        if (remainingDays <= 0) return 0; // Avoid division by zero or negative days
+
+        const suggestedStudyTime = Math.min(
+          Math.round((hoursNeeded / remainingDays) * 10) / 10,
+          8
+        );
+
+        const docRef = db.collection("learning_plans").doc(student_id);
+        await docRef.update({
+          suggested_study_time: suggestedStudyTime,
+        });
+      },
+      { timezone: "Asia/Bangkok" }
+    );
 });
 
 const server = app.listen(port, function () {
