@@ -33,6 +33,9 @@ const client = new SMTPClient({
 const port = process.env.PORT || 8000;
 const app = express();
 
+let assignmentSchedules = {};
+let preferredSchedules = {};
+
 app.use(express.json());
 app.use(bodyParser.json());
 
@@ -185,13 +188,31 @@ app.post("/api/setschedule-assignment", async function (req, res) {
     deadlineDate.getMonth() + 1
   } *`;
 
+  if (
+    assignmentSchedules[assignment_id] &&
+    assignmentSchedules[assignment_id][2]
+  )
+    assignmentSchedules[assignment_id][2].stop();
+
+  if (
+    assignmentSchedules[assignment_id] &&
+    assignmentSchedules[assignment_id][1]
+  )
+    assignmentSchedules[assignment_id][1].stop();
+
+  if (
+    assignmentSchedules[assignment_id] &&
+    assignmentSchedules[assignment_id][0]
+  )
+    assignmentSchedules[assignment_id][0].stop();
+
   // Check if schedules are past
   const now = new Date();
 
   if (threeDaysBefore < now) {
     console.log("3 days before deadline has already passed");
   } else {
-    const cronSchedule3 = cron.schedule(
+    assignmentSchedules[assignment_id][2] = cron.schedule(
       schedule3,
       async () => {
         const submissionsQuery = db
@@ -229,7 +250,9 @@ app.post("/api/setschedule-assignment", async function (req, res) {
         console.log("Sending notification 3 days before deadline");
 
         db.runTransaction(async (transaction) => {
-          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocRef = db
+            .collection("last_indices")
+            .doc("notifications");
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
@@ -276,7 +299,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
             }
           }
         );
-        cronSchedule3.stop();
+        assignmentSchedules[assignment_id][2].stop();
+        assignmentSchedules[assignment_id][2] = undefined;
       },
       { timezone: "Asia/Bangkok" }
     );
@@ -284,7 +308,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   if (oneDayBefore < now) {
     console.log("1 day before deadline has already passed");
   } else {
-    const cronSchedule1 = cron.schedule(
+    assignmentSchedules[assignment_id][1] = cron.schedule(
       schedule1,
       async () => {
         const submissionsQuery = db
@@ -322,7 +346,9 @@ app.post("/api/setschedule-assignment", async function (req, res) {
         console.log("Sending notification 1 days before deadline");
 
         db.runTransaction(async (transaction) => {
-          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocRef = db
+            .collection("last_indices")
+            .doc("notifications");
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
@@ -354,7 +380,6 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           return newId;
         });
 
-
         client.send(
           message(
             `Hey, \n\n You have 1 day left to finish your assignment "${assignmentName}".`,
@@ -370,7 +395,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
             }
           }
         );
-        cronSchedule1.stop();
+        assignmentSchedules[assignment_id][1].stop();
+        assignmentSchedules[assignment_id][1] = undefined;
       },
       { timezone: "Asia/Bangkok" }
     );
@@ -379,7 +405,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   if (deadlineDate < now) {
     console.log("Deadline has already passed");
   } else {
-    const cronSchedule0 = cron.schedule(
+    assignmentSchedules[assignment_id][0] = cron.schedule(
       schedule0,
       async () => {
         const submissionsQuery = db
@@ -425,7 +451,9 @@ app.post("/api/setschedule-assignment", async function (req, res) {
         console.log("Sending notification on deadline");
 
         db.runTransaction(async (transaction) => {
-          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocRef = db
+            .collection("last_indices")
+            .doc("notifications");
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
@@ -458,7 +486,9 @@ app.post("/api/setschedule-assignment", async function (req, res) {
         });
 
         db.runTransaction(async (transaction) => {
-          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocRef = db
+            .collection("last_indices")
+            .doc("notifications");
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
@@ -477,10 +507,12 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           );
 
           transaction.set(docRef, {
-            teacher_id: 'tid_1',
+            teacher_id: "tid_1",
             student_ids: null,
             title: `Assignment "${assignmentName}" has just been overdue.`,
-            description: `${studentsName.join(", ")} have just missed this asignment.`,
+            description: `${studentsName.join(
+              ", "
+            )} have just missed this asignment.`,
             link: `${assignment_id}`,
             time_sent: new Date().toISOString(),
             notification_id: newId,
@@ -537,14 +569,15 @@ app.post("/api/setschedule-assignment", async function (req, res) {
             }
           }
         );
-        cronSchedule0.stop();
+        assignmentSchedules[assignment_id][0].stop();
+        assignmentSchedules[assignment_id][0] = undefined;
       },
       { timezone: "Asia/Bangkok" }
     );
   }
 });
 
-app.get("/api/setschedule-newstudent", async function (req, res) {
+app.get("/api/setschedule-preferredtime", async function (req, res) {
   const { from, student_id } = req.body;
 
   if (!from || !student_id) {
@@ -593,28 +626,24 @@ app.get("/api/setschedule-newstudent", async function (req, res) {
   const fithteenMinutes = studyTimeStart
     .split(":")
     .map((item) => parseInt(item));
-  fithteenMinutes[1] += 15;
-  if (fithteenMinutes[1] >= 60) {
-    fithteenMinutes[1] %= 60;
-    fithteenMinutes[0] += 1;
+  fithteenMinutes[1] -= 15;
+  if (fithteenMinutes[1] < 60) {
+    fithteenMinutes[1] = 60 + fithteenMinutes[1];
+    fithteenMinutes[0] -= 1;
   }
-  if (fithteenMinutes[0] >= 24) {
-    fithteenMinutes[0] %= 24;
+  if (fithteenMinutes[0] < 0) {
+    fithteenMinutes[0] = 24 - fithteenMinutes[0];
   }
 
-  cron.schedule(
+  if (preferredSchedules[student_id]) preferredSchedules[student_id].stop();
+
+  preferredSchedules[student_id] = cron.schedule(
     `${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`,
     async () => {
       const learningPlanRef = db.collection("learning_plans").doc(student_id);
       const learningPlanDoc = await learningPlanRef.get();
-      if (!learningPlanDoc.exists) {
-        console.log("Learning plan not found");
-        res.status(404).send({
-          success: false,
-          message: "Learning plan not found",
-        });
-        return;
-      }
+      if (!learningPlanDoc.exists) return;
+
       const learningPlanData = learningPlanDoc.data();
 
       const studyHours = learningPlanData.study_hours;
@@ -625,11 +654,40 @@ app.get("/api/setschedule-newstudent", async function (req, res) {
         return;
       }
 
+      db.runTransaction(async (transaction) => {
+        const indexDocRef = db.collection("last_indices").doc("notifications");
+        const indexDocSnap = await transaction.get(indexDocRef);
+
+        let lastIndex = 0;
+        if (indexDocSnap.exists()) {
+          lastIndex = indexDocSnap.data().last_index;
+        }
+
+        const newIndex = lastIndex + 1;
+        const newId = `notifid_${newIndex}`;
+        const docRef = doc(db, "notifications", newId);
+
+        transaction.set(indexDocRef, { last_index: newIndex }, { merge: true });
+
+        transaction.set(docRef, {
+          teacher_id: null,
+          student_ids: [student_id],
+          title: `15 minutes before your preferred study time`,
+          description: `Hey, \n\n This is a reminder that your preferred study time is about to start in 15 minutes.`,
+          link: `/assignment`,
+          time_sent: new Date().toISOString(),
+          notification_id: newId,
+        });
+
+        console.log("Notifications added successfully with ID:", newId);
+        return newId;
+      });
+
       client.send(
         message(
-          `Hey, \n\n You have late 15 minutes to start your study hour. \n\n Please check your schedule and start your study hour.`,
+          `Hey, \n\n This is a reminder that your preferred study time is about to start in 15 minutes.`,
           from,
-          `Late study hour`,
+          `15 minutes before your preferred study time`,
           `<${studentEmail}>`
         ),
         (error, messageInfo) => {
