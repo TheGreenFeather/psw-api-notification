@@ -641,6 +641,8 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
 
   if (preferredSchedules[student_id]) preferredSchedules[student_id].stop();
 
+  console.log(`${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`);
+
   preferredSchedules[student_id] = cron.schedule(
     `${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`,
     async () => {
