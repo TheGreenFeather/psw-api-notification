@@ -260,7 +260,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
-          if (indexDocSnap.exists()) {
+          if (indexDocSnap.exists) {
             lastIndex = indexDocSnap.data().last_index;
           }
 
@@ -357,7 +357,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
-          if (indexDocSnap.exists()) {
+          if (indexDocSnap.exists) {
             lastIndex = indexDocSnap.data().last_index;
           }
 
@@ -463,7 +463,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
-          if (indexDocSnap.exists()) {
+          if (indexDocSnap.exists) {
             lastIndex = indexDocSnap.data().last_index;
           }
 
@@ -498,7 +498,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
           const indexDocSnap = await transaction.get(indexDocRef);
 
           let lastIndex = 0;
-          if (indexDocSnap.exists()) {
+          if (indexDocSnap.exists) {
             lastIndex = indexDocSnap.data().last_index;
           }
 
@@ -641,11 +641,10 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
 
   if (preferredSchedules[student_id]) preferredSchedules[student_id].stop();
 
-  console.log(`${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`);
-
   preferredSchedules[student_id] = cron.schedule(
     `${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`,
     async () => {
+      console.log(`sending reminder to ${student_id}`);
       const learningPlanRef = db.collection("learning_plans").doc(student_id);
       const learningPlanDoc = await learningPlanRef.get();
       if (!learningPlanDoc.exists) return;
@@ -665,7 +664,7 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
         const indexDocSnap = await transaction.get(indexDocRef);
 
         let lastIndex = 0;
-        if (indexDocSnap.exists()) {
+        if (indexDocSnap.exists) {
           lastIndex = indexDocSnap.data().last_index;
         }
 
