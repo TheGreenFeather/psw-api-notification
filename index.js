@@ -631,7 +631,7 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
     .split(":")
     .map((item) => parseInt(item));
   fithteenMinutes[1] -= 15;
-  if (fithteenMinutes[1] < 60) {
+  if (fithteenMinutes[1] < 0) {
     fithteenMinutes[1] = 60 + fithteenMinutes[1];
     fithteenMinutes[0] -= 1;
   }
