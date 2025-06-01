@@ -157,7 +157,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   const assignmentDoc = await assignmentRef.get();
   if (!assignmentDoc.exists) {
     console.log("Assignment not found");
-    res.status(404).send({ success: false, message: "Assignment not found" });
+    res.status(400).send({ success: false, message: "Assignment not found" });
     return;
   }
 
@@ -207,6 +207,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   )
     assignmentSchedules[assignment_id][0].stop();
 
+  if (!assignmentSchedules[assignment_id])
+    assignmentSchedules[assignment_id] = [null, null, null];
   // Check if schedules are past
   const now = new Date();
 
@@ -605,7 +607,7 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
   const studentDoc = await studentRef.get();
   if (!studentDoc.exists) {
     console.log("Student not found");
-    res.status(404).send({ success: false, message: "Student not found" });
+    res.status(400).send({ success: false, message: "Student not found" });
     return;
   }
   const studentData = studentDoc.data();
@@ -614,7 +616,7 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
   const learningPlanDoc = await learningPlanRef.get();
   if (!learningPlanDoc.exists) {
     console.log("Learning plan not found");
-    res.status(404).send({
+    res.status(400).send({
       success: false,
       message: "Learning plan not found",
     });
@@ -636,7 +638,7 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
     fithteenMinutes[0] -= 1;
   }
   if (fithteenMinutes[0] < 0) {
-    fithteenMinutes[0] = 24 - fithteenMinutes[0];
+    fithteenMinutes[0] = 24 + fithteenMinutes[0];
   }
 
   if (preferredSchedules[student_id]) preferredSchedules[student_id].stop();
@@ -653,7 +655,7 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
       const studyHours = learningPlanData.study_hours;
       const studyHourCurrent = studyHours[studyHours.length - 1];
 
-      if (studyHourCurrent > 0) {
+      if (studyHourCurrent >= learningPlanData.suggested_study_time) {
         console.log("Student has started study hour");
         return;
       }
