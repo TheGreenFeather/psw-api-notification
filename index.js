@@ -583,7 +583,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   }
 });
 
-app.get("/api/setschedule-preferredtime", async function (req, res) {
+app.post("/api/setschedule-preferredtime", async function (req, res) {
   const { from, student_id } = req.body;
 
   if (!from || !student_id) {
@@ -623,8 +623,6 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
     return;
   }
   const learningPlanData = learningPlanDoc.data();
-
-  res.status(200).send({ success: true });
 
   const studentEmail = studentData.email;
   const studyTimeStart = learningPlanData.study_time?.start;
@@ -743,6 +741,8 @@ app.get("/api/setschedule-preferredtime", async function (req, res) {
       },
       { timezone: "Asia/Bangkok" }
     );
+  
+  res.status(200).send({ success: true });
 });
 
 const server = app.listen(port, function () {
