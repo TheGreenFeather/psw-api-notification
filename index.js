@@ -711,6 +711,7 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
     suggestedSchedules[student_id] = cron.schedule(
       "0 6 * * *",
       async () => {
+        console.log('Updating ', student_id, 'suggested study time...');
         const learningPlanRef = db.collection("learning_plans").doc(student_id);
         const learningPlanDoc = await learningPlanRef.get();
         if (!learningPlanDoc.exists) return;
@@ -739,6 +740,7 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
         await docRef.update({
           suggested_study_time: suggestedStudyTime,
         });
+        console.log('Done updating ', student_id, 'suggested study time!');
       },
       { timezone: "Asia/Bangkok" }
     );
