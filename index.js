@@ -625,8 +625,60 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
   }
   const learningPlanData = learningPlanDoc.data();
 
+  if (!suggestedSchedules[student_id])
+    suggestedSchedules[student_id] = cron.schedule(
+      "0 6 * * *",
+      async () => {
+        console.log('Updating ', student_id, 'suggested study time...');
+        const learningPlanRef = db.collection("learning_plans").doc(student_id);
+        const learningPlanDoc = await learningPlanRef.get();
+        if (!learningPlanDoc.exists) return;
+
+        const learningPlanData = learningPlanDoc.data();
+
+        if (!learningPlanData.exam_date || !learningPlanData.target_score || !learningPlanData.initial_score) {
+          // If no exam date, target score or initial score, skip updating
+          console.log("No exam date or target score found", student_id);
+          return;
+        }
+
+        const currentDate = new Date();
+        const examTime = new Date(learningPlanData.exam_date);
+
+        const millisecondsPerDay = 1000 * 60 * 60 * 24;
+        const remainingDays = Math.ceil(
+          (examTime - currentDate) / millisecondsPerDay
+        );
+        const hoursNeeded =
+          0.3 *
+          (learningPlanData.target_score - learningPlanData.initial_score);
+
+        if (remainingDays <= 0) return 0; // Avoid division by zero or negative days
+
+        const suggestedStudyTime = Math.min(
+          Math.round((hoursNeeded / remainingDays) * 10) / 10,
+          8
+        );
+
+        const docRef = db.collection("learning_plans").doc(student_id);
+        await docRef.update({
+          suggested_study_time: suggestedStudyTime,
+        });
+        console.log('Done updating ', student_id, 'suggested study time!');
+      },
+      { timezone: "Asia/Bangkok" }
+    );
+
   const studentEmail = studentData.email;
   const studyTimeStart = learningPlanData.study_time?.start;
+
+  if (studyTimeStart === '') {
+    console.log("Study time start not found");
+    return res.status(400).send({
+      success: false,
+      message: "Study time start not found",
+    });
+  }
 
   const fithteenMinutes = studyTimeStart
     .split(":")
@@ -707,50 +759,6 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
     },
     { timezone: "Asia/Bangkok" }
   );
-
-  if (!suggestedSchedules[student_id])
-    suggestedSchedules[student_id] = cron.schedule(
-      "0 6 * * *",
-      async () => {
-        console.log('Updating ', student_id, 'suggested study time...');
-        const learningPlanRef = db.collection("learning_plans").doc(student_id);
-        const learningPlanDoc = await learningPlanRef.get();
-        if (!learningPlanDoc.exists) return;
-
-        const learningPlanData = learningPlanDoc.data();
-
-        if (!learningPlanData.exam_date || !learningPlanData.target_score || !learningPlanData.initial_score) {
-          // If no exam date, target score or initial score, skip updating
-          console.log("No exam date or target score found", student_id);
-          return;
-        }
-
-        const currentDate = new Date();
-        const examTime = new Date(learningPlanData.exam_date);
-
-        const millisecondsPerDay = 1000 * 60 * 60 * 24;
-        const remainingDays = Math.ceil(
-          (examTime - currentDate) / millisecondsPerDay
-        );
-        const hoursNeeded =
-          0.3 *
-          (learningPlanData.target_score - learningPlanData.initial_score);
-
-        if (remainingDays <= 0) return 0; // Avoid division by zero or negative days
-
-        const suggestedStudyTime = Math.min(
-          Math.round((hoursNeeded / remainingDays) * 10) / 10,
-          8
-        );
-
-        const docRef = db.collection("learning_plans").doc(student_id);
-        await docRef.update({
-          suggested_study_time: suggestedStudyTime,
-        });
-        console.log('Done updating ', student_id, 'suggested study time!');
-      },
-      { timezone: "Asia/Bangkok" }
-    );
   
   res.status(200).send({ success: true });
 });
