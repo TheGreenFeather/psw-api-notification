@@ -719,7 +719,8 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
 
         const learningPlanData = learningPlanDoc.data();
 
-        if (!learningPlanData.exam_date || !learningPlanData.target_score) {
+        if (!learningPlanData.exam_date || !learningPlanData.target_score || !learningPlanData.initial_score) {
+          // If no exam date, target score or initial score, skip updating
           console.log("No exam date or target score found", student_id);
           return;
         }
