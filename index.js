@@ -162,7 +162,8 @@ app.post("/api/setschedule-assignment", async function (req, res) {
   }
 
   const assignmentData = assignmentDoc.data();
-  const deadline = assignmentData.deadline;
+  let deadline = assignmentData.deadline.split("/");
+  deadline = `${deadline[1]}/${deadline[0]}/${deadline[2]}`;
   const assignmentName = assignmentData.name;
 
   res.status(200).send({ success: true });
@@ -717,6 +718,11 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
         if (!learningPlanDoc.exists) return;
 
         const learningPlanData = learningPlanDoc.data();
+
+        if (!learningPlanData.exam_date || !learningPlanData.target_score) {
+          console.log("No exam date or target score found", student_id);
+          return;
+        }
 
         const currentDate = new Date();
         const examTime = new Date(learningPlanData.exam_date);
