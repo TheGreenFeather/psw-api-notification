@@ -53,84 +53,90 @@ app.use((req, res, next) => {
 });
 
 // Endpoint to send a message to a topic
-app.post("/api/subscribe-push-notify", (req, res) => {
-  const { tokens, topic } = req.body;
+// app.post("/api/subscribe-push-notify", (req, res) => {
+//   const { tokens, topic } = req.body;
 
-  if (!tokens || !topic) {
-    return res.status(400).send({ success: false });
-  }
+//   if (!tokens || !topic) {
+//     return res.status(400).send({ success: false, message: "Missing input field" });
+//   }
 
-  messaging
-    .subscribeToTopic(tokens, topic)
-    .then((subscribeResponse) => {
-      console.log("Successfully subscribed topic:", subscribeResponse);
-      res.status(200).send({ success: true, subscribeResponse });
-    })
-    .catch((error) => {
-      console.error("Error subcribing topic:", error);
-      res.status(500).send({ success: false, error });
-    });
-});
+//   messaging
+//     .subscribeToTopic(tokens, topic)
+//     .then((subscribeResponse) => {
+//       console.log("Successfully subscribed topic:", subscribeResponse);
+//       res.status(200).send({ success: true, subscribeResponse });
+//     })
+//     .catch((error) => {
+//       console.error("Error subcribing topic:", error);
+//       res.status(500).send({ success: false, error });
+//     });
+// });
 
-app.post("/api/send-push-notify", (req, res) => {
-  const { notification, topic } = req.body;
+// app.post("/api/send-push-notify", (req, res) => {
+//   const { notification, topic } = req.body;
 
-  if (!notification || !topic) {
-    return res.status(400).send({ success: false });
-  }
+//   if (!notification || !topic) {
+//     return res.status(400).send({ success: false, message: "Missing input field" });
+//   }
 
-  const message = {
-    notification: {
-      title: notification.title,
-      body: notification.body,
-    },
-    topic: topic,
-  };
+//   const message = {
+//     notification: {
+//       title: notification.title,
+//       body: notification.body,
+//     },
+//     topic: topic,
+//   };
 
-  messaging
-    .send(message)
-    .then((sendResponse) => {
-      console.log("Successfully sent push message:", sendResponse);
-      res.status(200).send({
-        success: true,
-        response: { sendResponse },
-      });
-    })
-    .catch((error) => {
-      console.error("Error sending push message:", error);
-      res.status(500).send({ success: false, error });
-    });
-});
+//   messaging
+//     .send(message)
+//     .then((sendResponse) => {
+//       console.log("Successfully sent push message:", sendResponse);
+//       res.status(200).send({
+//         success: true,
+//         response: { sendResponse },
+//       });
+//     })
+//     .catch((error) => {
+//       console.error("Error sending push message:", error);
+//       res.status(500).send({ success: false, error });
+//     });
+// });
 
 app.post("/api/email-notify", function (req, res) {
-  const { content, from, to, subject } = req.body;
+  try {
+    const { content, from, to, subject } = req.body;
 
-  if (!content || !from || !to || !subject) {
-    return res.status(400).send({ success: false });
-  }
-
-  const message = {
-    text: content,
-    from: from,
-    to: to,
-    subject: subject,
-    attachment: [
-      {
-        data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://geducation.netlify.app" style="color: white">https://geducation.netlify.app</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
-        alternative: true,
-      },
-    ],
-  };
-
-  client.send(message, (error, messageInfo) => {
-    if (error) {
-      console.log("Error sending email message:", error);
-      res.status(500).send({ success: false, error });
-    } else {
-      console.log("Successfully sent email message:", messageInfo);
-      res.status(200).send({ success: true, messageInfo });
+    if (!content || !from || !to || !subject) {
+      return res.status(400).send({ success: false, message: "Missing input field" });
     }
-  });
+
+    const message = {
+      text: content,
+      from: from,
+      to: to,
+      subject: subject,
+      attachment: [
+        {
+          data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://geducation.netlify.app" style="color: white">https://geducation.netlify.app</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
+          alternative: true,
+        },
+      ],
+    };
+
+    client.send(message, (error, messageInfo) => {
+      if (error) {
+        console.log("Error sending email message:", error);
+        res.status(500).send({ success: false, error });
+      } else {
+        console.log("Successfully sent email message:", messageInfo);
+        res.status(200).send({ success: true, messageInfo });
+      }
+    });
+  }
+  catch(error) {
+    res.status(500).send({ success: true, message: error });
+    console.log(error);
+  }
 });
 
 app.post("/api/setschedule-assignment", async function (req, res) {
@@ -774,7 +780,8 @@ app.post("/api/setschedule-preferredtime", async function (req, res) {
     console.log(`Successfully set preferred time schedule for ${studentsName}`)
   }
   catch(error) {
-    res.status(400).send({ success: true, error });
+    res.status(500).send({ success: true, message: error });
+    console.log(error);
   }
 });
 
