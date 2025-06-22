@@ -134,633 +134,648 @@ app.post("/api/email-notify", function (req, res) {
 });
 
 app.post("/api/setschedule-assignment", async function (req, res) {
-  const { from, student_ids, assignment_id } = req.body;
+  try {
+    const { from, student_ids, assignment_id } = req.body;
 
-  if (!from || !student_ids || !assignment_id) {
-    return res.status(400).send({ success: false });
-  }
+    if (!from || !student_ids || !assignment_id) {
+      return res.status(400).send({ success: false, message: "Missing input field" });
+    }
 
-  const message = (content, from, subject, to) => ({
-    text: content,
-    from: from,
-    to: to,
-    subject: subject,
-    attachment: [
-      {
-        data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://geducation.netlify.app" style="color: white">https://geducation.netlify.app/</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
-        alternative: true,
-      },
-    ],
-  });
+    const message = (content, from, subject, to) => ({
+      text: content,
+      from: from,
+      to: to,
+      subject: subject,
+      attachment: [
+        {
+          data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://geducation.netlify.app" style="color: white">https://geducation.netlify.app/</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
+          alternative: true,
+        },
+      ],
+    });
 
-  const assignmentRef = db.collection("assignments").doc(assignment_id);
-  const assignmentDoc = await assignmentRef.get();
-  if (!assignmentDoc.exists) {
-    console.log("Assignment not found");
-    res.status(400).send({ success: false, message: "Assignment not found" });
-    return;
-  }
+    const assignmentRef = db.collection("assignments").doc(assignment_id);
+    const assignmentDoc = await assignmentRef.get();
+    if (!assignmentDoc.exists) {
+      console.log("Assignment not found");
+      return res.status(400).send({ success: false, message: "Assignment not found" });
+    }
 
-  const assignmentData = assignmentDoc.data();
-  let deadline = assignmentData.deadline.split("/");
-  deadline = `${deadline[1]}/${deadline[0]}/${deadline[2]}`;
-  const assignmentName = assignmentData.name;
+    const assignmentData = assignmentDoc.data();
+    let deadline = assignmentData.deadline.split("/");
+    deadline = `${deadline[1]}/${deadline[0]}/${deadline[2]}`;
+    const assignmentName = assignmentData.name;
 
-  res.status(200).send({ success: true });
+    const threeDaysBefore = new Date(deadline);
+    threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
+    threeDaysBefore.setHours(6, 0, 0, 0); // Set to 6:00 AM
 
-  const threeDaysBefore = new Date(deadline);
-  threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
-  threeDaysBefore.setHours(6, 0, 0, 0); // Set to 6:00 AM
+    const oneDayBefore = new Date(deadline);
+    oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+    oneDayBefore.setHours(6, 0, 0, 0); // Set to 6:00 AM
 
-  const oneDayBefore = new Date(deadline);
-  oneDayBefore.setDate(oneDayBefore.getDate() - 1);
-  oneDayBefore.setHours(6, 0, 0, 0); // Set to 6:00 AM
+    const deadlineDate = new Date(deadline);
+    deadlineDate.setHours(6, 0, 0, 0); // Set to 6:00 AM
 
-  const deadlineDate = new Date(deadline);
-  deadlineDate.setHours(6, 0, 0, 0); // Set to 6:00 AM
+    const schedule3 = `${threeDaysBefore.getMinutes()} ${threeDaysBefore.getHours()} ${threeDaysBefore.getDate()} ${
+      threeDaysBefore.getMonth() + 1
+    } *`;
+    const schedule1 = `${oneDayBefore.getMinutes()} ${oneDayBefore.getHours()} ${oneDayBefore.getDate()} ${
+      oneDayBefore.getMonth() + 1
+    } *`;
 
-  const schedule3 = `${threeDaysBefore.getMinutes()} ${threeDaysBefore.getHours()} ${threeDaysBefore.getDate()} ${
-    threeDaysBefore.getMonth() + 1
-  } *`;
-  const schedule1 = `${oneDayBefore.getMinutes()} ${oneDayBefore.getHours()} ${oneDayBefore.getDate()} ${
-    oneDayBefore.getMonth() + 1
-  } *`;
+    const schedule0 = `${deadlineDate.getMinutes()} ${deadlineDate.getHours()} ${deadlineDate.getDate()} ${
+      deadlineDate.getMonth() + 1
+    } *`;
 
-  const schedule0 = `${deadlineDate.getMinutes()} ${deadlineDate.getHours()} ${deadlineDate.getDate()} ${
-    deadlineDate.getMonth() + 1
-  } *`;
+    if(!cron.validate(schedule0) || !cron.validate(schedule1) || !cron.validate(schedule3)) {
+      return res.status(400).send({ success: false, message: `Invalid Schedule Time - Specifically schedule0: ${cron.validate(schedule0)} | schedule1: ${cron.validate(schedule1)} | schedule1: ${cron.validate(schedule1)}` });
+    }
 
-  if (
-    assignmentSchedules[assignment_id] &&
-    assignmentSchedules[assignment_id][2]
-  )
-    assignmentSchedules[assignment_id][2].stop();
+    if (
+      assignmentSchedules[assignment_id] &&
+      assignmentSchedules[assignment_id][2]
+    )
+      assignmentSchedules[assignment_id][2].stop();
 
-  if (
-    assignmentSchedules[assignment_id] &&
-    assignmentSchedules[assignment_id][1]
-  )
-    assignmentSchedules[assignment_id][1].stop();
+    if (
+      assignmentSchedules[assignment_id] &&
+      assignmentSchedules[assignment_id][1]
+    )
+      assignmentSchedules[assignment_id][1].stop();
 
-  if (
-    assignmentSchedules[assignment_id] &&
-    assignmentSchedules[assignment_id][0]
-  )
-    assignmentSchedules[assignment_id][0].stop();
+    if (
+      assignmentSchedules[assignment_id] &&
+      assignmentSchedules[assignment_id][0]
+    )
+      assignmentSchedules[assignment_id][0].stop();
 
-  if (!assignmentSchedules[assignment_id])
-    assignmentSchedules[assignment_id] = [null, null, null];
-  // Check if schedules are past
-  const now = new Date();
+    if (!assignmentSchedules[assignment_id])
+      assignmentSchedules[assignment_id] = [null, null, null];
+    // Check if schedules are past
+    const now = new Date();
 
-  if (threeDaysBefore < now) {
-    console.log("3 days before deadline has already passed");
-  } else {
-    assignmentSchedules[assignment_id][2] = cron.schedule(
-      schedule3,
-      async () => {
-        const submissionsQuery = db
-          .collection("submissions")
-          .where("student_id", "in", student_ids)
-          .where("assignment_id", "==", assignment_id);
-        const submissionsSnapshot = await submissionsQuery.get();
+    if (threeDaysBefore < now) {
+      console.log("3 days before deadline has already passed");
+    } else {
+      assignmentSchedules[assignment_id][2] = cron.schedule(
+        schedule3,
+        async () => {
+          const submissionsQuery = db
+            .collection("submissions")
+            .where("student_id", "in", student_ids)
+            .where("assignment_id", "==", assignment_id);
+          const submissionsSnapshot = await submissionsQuery.get();
 
-        const studentsFinishSubmission = submissionsSnapshot.empty
-          ? []
-          : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
-        const studentsNotFinishSubmission = student_ids.filter(
-          (student_id) => !studentsFinishSubmission.includes(student_id)
-        );
+          const studentsFinishSubmission = submissionsSnapshot.empty
+            ? []
+            : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+          const studentsNotFinishSubmission = student_ids.filter(
+            (student_id) => !studentsFinishSubmission.includes(student_id)
+          );
 
-        if (studentsNotFinishSubmission.length === 0) {
-          console.log("All students have finished their submission");
+          if (studentsNotFinishSubmission.length === 0) {
+            console.log("All students have finished their submission");
+            assignmentSchedules[assignment_id][2].stop();
+            assignmentSchedules[assignment_id][2] = undefined;
+            return;
+          }
+
+          const studentsQuery = db
+            .collection("students")
+            .where("student_id", "in", studentsNotFinishSubmission);
+          const studentsSnapshot = await studentsQuery.get();
+
+          const studentsEmail = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+          const studentsId = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().student_id);
+
+          console.log("Sending notification 3 days before deadline");
+
+          db.runTransaction(async (transaction) => {
+            const indexDocRef = db
+              .collection("last_indices")
+              .doc("notifications");
+            const indexDocSnap = await transaction.get(indexDocRef);
+
+            let lastIndex = 0;
+            if (indexDocSnap.exists) {
+              lastIndex = indexDocSnap.data().last_index;
+            }
+
+            const newIndex = lastIndex + 1;
+            const newId = `notifid_${newIndex}`;
+            const docRef = db.collection("notifications").doc(newId);
+
+            transaction.set(
+              indexDocRef,
+              { last_index: newIndex },
+              { merge: true }
+            );
+
+            transaction.set(docRef, {
+              teacher_id: null,
+              student_ids: studentsId,
+              title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
+              description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+              link: `/card-detail?id=${assignment_id}`,
+              time_sent: new Date().toISOString(),
+              notification_id: newId,
+            });
+
+            console.log("Notifications added successfully with ID:", newId);
+            return newId;
+          });
+
+          client.send(
+            message(
+              `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+              from,
+              `3 day lefts before the deadline of assignment "${assignmentName}"`,
+              studentsEmail.map((email) => `<${email}>`).join(", ")
+            ),
+            (error, messageInfo) => {
+              if (error) {
+                console.log("Error sending email message:", error);
+              } else {
+                console.log("Successfully sent email message:", messageInfo);
+              }
+            }
+          );
           assignmentSchedules[assignment_id][2].stop();
           assignmentSchedules[assignment_id][2] = undefined;
-          return;
-        }
+        },
+        { timezone: "Asia/Bangkok" }
+      );
+    }
+    if (oneDayBefore < now) {
+      console.log("1 day before deadline has already passed");
+    } else {
+      assignmentSchedules[assignment_id][1] = cron.schedule(
+        schedule1,
+        async () => {
+          const submissionsQuery = db
+            .collection("submissions")
+            .where("student_id", "in", student_ids)
+            .where("assignment_id", "==", assignment_id);
+          const submissionsSnapshot = await submissionsQuery.get();
 
-        const studentsQuery = db
-          .collection("students")
-          .where("student_id", "in", studentsNotFinishSubmission);
-        const studentsSnapshot = await studentsQuery.get();
-
-        const studentsEmail = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().email);
-
-        const studentsId = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().student_id);
-
-        console.log("Sending notification 3 days before deadline");
-
-        db.runTransaction(async (transaction) => {
-          const indexDocRef = db
-            .collection("last_indices")
-            .doc("notifications");
-          const indexDocSnap = await transaction.get(indexDocRef);
-
-          let lastIndex = 0;
-          if (indexDocSnap.exists) {
-            lastIndex = indexDocSnap.data().last_index;
-          }
-
-          const newIndex = lastIndex + 1;
-          const newId = `notifid_${newIndex}`;
-          const docRef = db.collection("notifications").doc(newId);
-
-          transaction.set(
-            indexDocRef,
-            { last_index: newIndex },
-            { merge: true }
+          const studentsFinishSubmission = submissionsSnapshot.empty
+            ? []
+            : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+          const studentsNotFinishSubmission = student_ids.filter(
+            (student_id) => !studentsFinishSubmission.includes(student_id)
           );
 
-          transaction.set(docRef, {
-            teacher_id: null,
-            student_ids: studentsId,
-            title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
-            description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
-            link: `/card-detail?id=${assignment_id}`,
-            time_sent: new Date().toISOString(),
-            notification_id: newId,
+          if (studentsNotFinishSubmission.length === 0) {
+            console.log("All students have finished their submission");
+            assignmentSchedules[assignment_id][1].stop();
+            assignmentSchedules[assignment_id][1] = undefined;
+            return;
+          }
+
+          const studentsQuery = db
+            .collection("students")
+            .where("student_id", "in", studentsNotFinishSubmission);
+          const studentsSnapshot = await studentsQuery.get();
+
+          const studentsEmail = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+          const studentsId = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().student_id);
+
+          console.log("Sending notification 1 days before deadline");
+
+          db.runTransaction(async (transaction) => {
+            const indexDocRef = db
+              .collection("last_indices")
+              .doc("notifications");
+            const indexDocSnap = await transaction.get(indexDocRef);
+
+            let lastIndex = 0;
+            if (indexDocSnap.exists) {
+              lastIndex = indexDocSnap.data().last_index;
+            }
+
+            const newIndex = lastIndex + 1;
+            const newId = `notifid_${newIndex}`;
+            const docRef = db.collection("notifications").doc(newId);
+
+            transaction.set(
+              indexDocRef,
+              { last_index: newIndex },
+              { merge: true }
+            );
+
+            transaction.set(docRef, {
+              teacher_id: null,
+              student_ids: studentsId,
+              title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
+              description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+              link: `/card-detail?id=${assignment_id}`,
+              time_sent: new Date().toISOString(),
+              notification_id: newId,
+            });
+
+            console.log("Notifications added successfully with ID:", newId);
+            return newId;
           });
 
-          console.log("Notifications added successfully with ID:", newId);
-          return newId;
-        });
-
-        client.send(
-          message(
-            `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
-            from,
-            `3 day lefts before the deadline of assignment "${assignmentName}"`,
-            studentsEmail.map((email) => `<${email}>`).join(", ")
-          ),
-          (error, messageInfo) => {
-            if (error) {
-              console.log("Error sending email message:", error);
-            } else {
-              console.log("Successfully sent email message:", messageInfo);
+          client.send(
+            message(
+              `Hey, \n\n You have 1 day left to finish your assignment "${assignmentName}".`,
+              from,
+              `1 day left before the deadline of assignment "${assignmentName}"`,
+              studentsEmail.map((email) => `<${email}>`).join(", ")
+            ),
+            (error, messageInfo) => {
+              if (error) {
+                console.log("Error sending email message:", error);
+              } else {
+                console.log("Successfully sent email message:", messageInfo);
+              }
             }
-          }
-        );
-        assignmentSchedules[assignment_id][2].stop();
-        assignmentSchedules[assignment_id][2] = undefined;
-      },
-      { timezone: "Asia/Bangkok" }
-    );
-  }
-  if (oneDayBefore < now) {
-    console.log("1 day before deadline has already passed");
-  } else {
-    assignmentSchedules[assignment_id][1] = cron.schedule(
-      schedule1,
-      async () => {
-        const submissionsQuery = db
-          .collection("submissions")
-          .where("student_id", "in", student_ids)
-          .where("assignment_id", "==", assignment_id);
-        const submissionsSnapshot = await submissionsQuery.get();
-
-        const studentsFinishSubmission = submissionsSnapshot.empty
-          ? []
-          : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
-        const studentsNotFinishSubmission = student_ids.filter(
-          (student_id) => !studentsFinishSubmission.includes(student_id)
-        );
-
-        if (studentsNotFinishSubmission.length === 0) {
-          console.log("All students have finished their submission");
+          );
           assignmentSchedules[assignment_id][1].stop();
           assignmentSchedules[assignment_id][1] = undefined;
-          return;
-        }
+        },
+        { timezone: "Asia/Bangkok" }
+      );
+    }
 
-        const studentsQuery = db
-          .collection("students")
-          .where("student_id", "in", studentsNotFinishSubmission);
-        const studentsSnapshot = await studentsQuery.get();
+    if (deadlineDate < now) {
+      console.log("Deadline has already passed");
+    } else {
+      assignmentSchedules[assignment_id][0] = cron.schedule(
+        schedule0,
+        async () => {
+          const submissionsQuery = db
+            .collection("submissions")
+            .where("student_id", "in", student_ids)
+            .where("assignment_id", "==", assignment_id);
+          const submissionsSnapshot = await submissionsQuery.get();
 
-        const studentsEmail = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().email);
-
-        const studentsId = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().student_id);
-
-        console.log("Sending notification 1 days before deadline");
-
-        db.runTransaction(async (transaction) => {
-          const indexDocRef = db
-            .collection("last_indices")
-            .doc("notifications");
-          const indexDocSnap = await transaction.get(indexDocRef);
-
-          let lastIndex = 0;
-          if (indexDocSnap.exists) {
-            lastIndex = indexDocSnap.data().last_index;
-          }
-
-          const newIndex = lastIndex + 1;
-          const newId = `notifid_${newIndex}`;
-          const docRef = db.collection("notifications").doc(newId);
-
-          transaction.set(
-            indexDocRef,
-            { last_index: newIndex },
-            { merge: true }
+          const studentsFinishSubmission = submissionsSnapshot.empty
+            ? []
+            : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
+          const studentsNotFinishSubmission = student_ids.filter(
+            (student_id) => !studentsFinishSubmission.includes(student_id)
           );
 
-          transaction.set(docRef, {
-            teacher_id: null,
-            student_ids: studentsId,
-            title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
-            description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
-            link: `/card-detail?id=${assignment_id}`,
-            time_sent: new Date().toISOString(),
-            notification_id: newId,
+          if (studentsNotFinishSubmission.length === 0) {
+            console.log("All students have finished their submission");
+            assignmentSchedules[assignment_id][0].stop();
+            assignmentSchedules[assignment_id][0] = undefined;
+            return;
+          }
+
+          const studentsQuery = db
+            .collection("students")
+            .where("student_id", "in", studentsNotFinishSubmission);
+          const studentsSnapshot = await studentsQuery.get();
+
+          const parentsEmail = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().parent_email);
+
+          const studentsEmail = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().email);
+
+          const studentsName = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().name);
+
+          const studentsId = studentsSnapshot.empty
+            ? []
+            : studentsSnapshot.docs.map((doc) => doc.data().student_id);
+
+          console.log("Sending notification on deadline");
+
+          db.runTransaction(async (transaction) => {
+            const indexDocRef = db
+              .collection("last_indices")
+              .doc("notifications");
+            const indexDocSnap = await transaction.get(indexDocRef);
+
+            let lastIndex = 0;
+            if (indexDocSnap.exists) {
+              lastIndex = indexDocSnap.data().last_index;
+            }
+
+            const newIndex = lastIndex + 1;
+            const newId = `notifid_${newIndex}`;
+            const docRef = db.collection("notifications").doc(newId);
+
+            transaction.set(
+              indexDocRef,
+              { last_index: newIndex },
+              { merge: true }
+            );
+
+            transaction.set(docRef, {
+              teacher_id: null,
+              student_ids: studentsId,
+              title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
+              description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
+              link: `/card-detail?id=${assignment_id}`,
+              time_sent: new Date().toISOString(),
+              notification_id: newId,
+            });
+
+            console.log("Notifications added successfully with ID:", newId);
+            return newId;
           });
 
-          console.log("Notifications added successfully with ID:", newId);
-          return newId;
-        });
+          db.runTransaction(async (transaction) => {
+            const indexDocRef = db
+              .collection("last_indices")
+              .doc("notifications");
+            const indexDocSnap = await transaction.get(indexDocRef);
 
-        client.send(
-          message(
-            `Hey, \n\n You have 1 day left to finish your assignment "${assignmentName}".`,
-            from,
-            `1 day left before the deadline of assignment "${assignmentName}"`,
-            studentsEmail.map((email) => `<${email}>`).join(", ")
-          ),
-          (error, messageInfo) => {
-            if (error) {
-              console.log("Error sending email message:", error);
-            } else {
-              console.log("Successfully sent email message:", messageInfo);
+            let lastIndex = 0;
+            if (indexDocSnap.exists) {
+              lastIndex = indexDocSnap.data().last_index;
             }
-          }
-        );
-        assignmentSchedules[assignment_id][1].stop();
-        assignmentSchedules[assignment_id][1] = undefined;
-      },
-      { timezone: "Asia/Bangkok" }
-    );
-  }
 
-  if (deadlineDate < now) {
-    console.log("Deadline has already passed");
-  } else {
-    assignmentSchedules[assignment_id][0] = cron.schedule(
-      schedule0,
-      async () => {
-        const submissionsQuery = db
-          .collection("submissions")
-          .where("student_id", "in", student_ids)
-          .where("assignment_id", "==", assignment_id);
-        const submissionsSnapshot = await submissionsQuery.get();
+            const newIndex = lastIndex + 1;
+            const newId = `notifid_${newIndex}`;
+            const docRef = db.collection("notifications").doc(newId);
 
-        const studentsFinishSubmission = submissionsSnapshot.empty
-          ? []
-          : submissionsSnapshot.docs.map((doc) => doc.data().student_id);
-        const studentsNotFinishSubmission = student_ids.filter(
-          (student_id) => !studentsFinishSubmission.includes(student_id)
-        );
+            transaction.set(
+              indexDocRef,
+              { last_index: newIndex },
+              { merge: true }
+            );
 
-        if (studentsNotFinishSubmission.length === 0) {
-          console.log("All students have finished their submission");
+            transaction.set(docRef, {
+              teacher_id: "tid_1",
+              student_ids: null,
+              title: `Assignment "${assignmentName}" has just been overdue.`,
+              description: `${studentsName.join(
+                ", "
+              )} have just missed this asignment.`,
+              link: `${assignment_id}`,
+              time_sent: new Date().toISOString(),
+              notification_id: newId,
+            });
+
+            console.log("Notifications added successfully with ID:", newId);
+            return newId;
+          });
+
+          client.send(
+            message(
+              `Hey, \n\n You have missed your assignment "${assignmentName}".`,
+              from,
+              `Late assignment "${assignmentName}"`,
+              studentsEmail.map((email) => `<${email}>`).join(", ")
+            ),
+            (error, messageInfo) => {
+              if (error) {
+                console.log("Error sending email message:", error);
+              } else {
+                console.log("Successfully sent email message:", messageInfo);
+              }
+            }
+          );
+
+          client.send(
+            message(
+              `Dear parents,\n\n Your child has missed the assignment "${assignmentName}".`,
+              from,
+              `Late assignment "${assignmentName}"`,
+              parentsEmail.map((email) => `<${email}>`).join(", ")
+            ),
+            (error, messageInfo) => {
+              if (error) {
+                console.log("Error sending email message:", error);
+              } else {
+                console.log("Successfully sent email message:", messageInfo);
+              }
+            }
+          );
+
+          client.send(
+            message(
+              `${studentsName.join(", ")} have just missed this asignment.`,
+              from,
+              `Assignment "${assignmentName}" has just been overdue.`,
+              from
+            ),
+            (error, messageInfo) => {
+              if (error) {
+                console.log("Error sending email message:", error);
+              } else {
+                console.log("Successfully sent email message:", messageInfo);
+              }
+            }
+          );
           assignmentSchedules[assignment_id][0].stop();
           assignmentSchedules[assignment_id][0] = undefined;
-          return;
-        }
-
-        const studentsQuery = db
-          .collection("students")
-          .where("student_id", "in", studentsNotFinishSubmission);
-        const studentsSnapshot = await studentsQuery.get();
-
-        const parentsEmail = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().parent_email);
-
-        const studentsEmail = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().email);
-
-        const studentsName = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().name);
-
-        const studentsId = studentsSnapshot.empty
-          ? []
-          : studentsSnapshot.docs.map((doc) => doc.data().student_id);
-
-        console.log("Sending notification on deadline");
-
-        db.runTransaction(async (transaction) => {
-          const indexDocRef = db
-            .collection("last_indices")
-            .doc("notifications");
-          const indexDocSnap = await transaction.get(indexDocRef);
-
-          let lastIndex = 0;
-          if (indexDocSnap.exists) {
-            lastIndex = indexDocSnap.data().last_index;
-          }
-
-          const newIndex = lastIndex + 1;
-          const newId = `notifid_${newIndex}`;
-          const docRef = db.collection("notifications").doc(newId);
-
-          transaction.set(
-            indexDocRef,
-            { last_index: newIndex },
-            { merge: true }
-          );
-
-          transaction.set(docRef, {
-            teacher_id: null,
-            student_ids: studentsId,
-            title: `3 day lefts before the deadline of assignment "${assignmentName}"`,
-            description: `Hey, \n\n You have 3 day left to finish your assignment "${assignmentName}".`,
-            link: `/card-detail?id=${assignment_id}`,
-            time_sent: new Date().toISOString(),
-            notification_id: newId,
-          });
-
-          console.log("Notifications added successfully with ID:", newId);
-          return newId;
-        });
-
-        db.runTransaction(async (transaction) => {
-          const indexDocRef = db
-            .collection("last_indices")
-            .doc("notifications");
-          const indexDocSnap = await transaction.get(indexDocRef);
-
-          let lastIndex = 0;
-          if (indexDocSnap.exists) {
-            lastIndex = indexDocSnap.data().last_index;
-          }
-
-          const newIndex = lastIndex + 1;
-          const newId = `notifid_${newIndex}`;
-          const docRef = db.collection("notifications").doc(newId);
-
-          transaction.set(
-            indexDocRef,
-            { last_index: newIndex },
-            { merge: true }
-          );
-
-          transaction.set(docRef, {
-            teacher_id: "tid_1",
-            student_ids: null,
-            title: `Assignment "${assignmentName}" has just been overdue.`,
-            description: `${studentsName.join(
-              ", "
-            )} have just missed this asignment.`,
-            link: `${assignment_id}`,
-            time_sent: new Date().toISOString(),
-            notification_id: newId,
-          });
-
-          console.log("Notifications added successfully with ID:", newId);
-          return newId;
-        });
-
-        client.send(
-          message(
-            `Hey, \n\n You have missed your assignment "${assignmentName}".`,
-            from,
-            `Late assignment "${assignmentName}"`,
-            studentsEmail.map((email) => `<${email}>`).join(", ")
-          ),
-          (error, messageInfo) => {
-            if (error) {
-              console.log("Error sending email message:", error);
-            } else {
-              console.log("Successfully sent email message:", messageInfo);
-            }
-          }
-        );
-
-        client.send(
-          message(
-            `Dear parents,\n\n Your child has missed the assignment "${assignmentName}".`,
-            from,
-            `Late assignment "${assignmentName}"`,
-            parentsEmail.map((email) => `<${email}>`).join(", ")
-          ),
-          (error, messageInfo) => {
-            if (error) {
-              console.log("Error sending email message:", error);
-            } else {
-              console.log("Successfully sent email message:", messageInfo);
-            }
-          }
-        );
-
-        client.send(
-          message(
-            `${studentsName.join(", ")} have just missed this asignment.`,
-            from,
-            `Assignment "${assignmentName}" has just been overdue.`,
-            from
-          ),
-          (error, messageInfo) => {
-            if (error) {
-              console.log("Error sending email message:", error);
-            } else {
-              console.log("Successfully sent email message:", messageInfo);
-            }
-          }
-        );
-        assignmentSchedules[assignment_id][0].stop();
-        assignmentSchedules[assignment_id][0] = undefined;
-      },
-      { timezone: "Asia/Bangkok" }
-    );
+        },
+        { timezone: "Asia/Bangkok" }
+      );
+    }
+    res.status(200).send({ success: true });
+    console.log(`Succesfully set schedule for assignment ${assignmentName}`)
+  } catch (error) {
+    res.status(500).send({ success: false, message: error });
+    console.log(error);
   }
 });
 
 app.post("/api/setschedule-preferredtime", async function (req, res) {
-  const { from, student_id } = req.body;
+  try {
+    const { from, student_id } = req.body;
 
-  if (!from || !student_id) {
-    return res.status(400).send({ success: false });
-  }
+    if (!from || !student_id) {
+      return res.status(400).send({ success: false, message: "Missing input field" });
+    }
 
-  const message = (content, from, subject, to) => ({
-    text: content,
-    from: from,
-    to: to,
-    subject: subject,
-    attachment: [
-      {
-        data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://g.edu.com" style="color: white">https://g.edu.com</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
-        alternative: true,
-      },
-    ],
-  });
-
-  const studentRef = db.collection("students").doc(student_id);
-  const studentDoc = await studentRef.get();
-  if (!studentDoc.exists) {
-    console.log("Student not found");
-    res.status(400).send({ success: false, message: "Student not found" });
-    return;
-  }
-  const studentData = studentDoc.data();
-
-  const learningPlanRef = db.collection("learning_plans").doc(student_id);
-  const learningPlanDoc = await learningPlanRef.get();
-  if (!learningPlanDoc.exists) {
-    console.log("Learning plan not found");
-    res.status(400).send({
-      success: false,
-      message: "Learning plan not found",
+    const message = (content, from, subject, to) => ({
+      text: content,
+      from: from,
+      to: to,
+      subject: subject,
+      attachment: [
+        {
+          data: `<!DOCTYPE html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>Email Notifition</title><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" /><style media="all" type="text/css">@media (max-width: 600px) {.container,.header,.footer,.download,.title,.copyright,.weblink,.webname {width: 20rem !important;}.content,.sincerely,.dear,.download,.webname {font-size: medium !important;}.title,.header {font-size: large !important;}.copyright {font-size: xx-small !important;}.weblink {font-size: small !important;}}</style></head><body style="background-color: #f4f7f8; font-family: 'Poppins', Arial, sans-serif"><table border="0" cellpadding="0" cellspacing="0" role="presentation" class="container" style="margin: auto; padding: 0; width: 36rem; background-color: white; border-radius: 0.75rem; overflow: hidden;"><tr><td class="header" style="color: white; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; background-color: black;">G.Edu<hr /></td></tr><tr><td class="body"><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="title" style="color: black; padding: 1.5rem 2rem; font-size: x-large; font-weight: 600; width: 36rem; text-align: center;">${subject}</td></tr><tr><td><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="content" style="color: black; font-style: italic; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">${content}</td></tr><tr><td class="sincerely" style="color: black; padding: 1.5rem 2rem; font-size: large; font-weight: 500;">Sincerely,<br />Ms. Giang</td></tr></table></td></tr></table></td></tr><tr><td class="footer" style="color: white; padding: 1.5rem 2rem; width: 36rem; background-color: black;"><hr /><table border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><td class="webname" style="width: 36rem; font-size: large; font-weight: 600; padding-block: 0.25rem; text-align: center;">G.Edu</td></tr><tr><td class="weblink" style="width: 36rem; font-size: medium; font-weight: 500; padding-block: 0.25rem; text-align: center;">visit: <a href="https://g.edu.com" style="color: white">https://g.edu.com</a></td></tr><tr><td class="copyright" style="width: 36rem; font-size: x-small; font-weight: 500; padding-block: 0.25rem; text-align: center;">copyright ${new Date().getFullYear()} ©</td></tr></table></td></tr></table></body></html>`,
+          alternative: true,
+        },
+      ],
     });
-    return;
-  }
-  const learningPlanData = learningPlanDoc.data();
 
-  if (!suggestedSchedules[student_id])
-    suggestedSchedules[student_id] = cron.schedule(
-      "0 6 * * *",
+    const studentRef = db.collection("students").doc(student_id);
+    const studentDoc = await studentRef.get();
+    if (!studentDoc.exists) {
+      console.log("Student not found");
+      res.status(400).send({ success: false, message: "Student not found" });
+      return;
+    }
+    const studentData = studentDoc.data();
+
+    const learningPlanRef = db.collection("learning_plans").doc(student_id);
+    const learningPlanDoc = await learningPlanRef.get();
+    if (!learningPlanDoc.exists) {
+      console.log("Learning plan not found");
+      res.status(400).send({
+        success: false,
+        message: "Learning plan not found",
+      });
+      return;
+    }
+    const learningPlanData = learningPlanDoc.data();
+
+    if (!suggestedSchedules[student_id])
+      suggestedSchedules[student_id] = cron.schedule(
+        "0 6 * * *",
+        async () => {
+          console.log('Updating ', student_id, 'suggested study time...');
+          const learningPlanRef = db.collection("learning_plans").doc(student_id);
+          const learningPlanDoc = await learningPlanRef.get();
+          if (!learningPlanDoc.exists) return;
+
+          const learningPlanData = learningPlanDoc.data();
+
+          if (!learningPlanData.exam_date || !learningPlanData.target_score || !learningPlanData.initial_score) {
+            // If no exam date, target score or initial score, skip updating
+            console.log("No exam date or target score found", student_id);
+            return;
+          }
+
+          const currentDate = new Date();
+          const examTime = new Date(learningPlanData.exam_date);
+
+          const millisecondsPerDay = 1000 * 60 * 60 * 24;
+          const remainingDays = Math.ceil(
+            (examTime - currentDate) / millisecondsPerDay
+          );
+          const hoursNeeded =
+            0.3 *
+            (learningPlanData.target_score - learningPlanData.initial_score);
+
+          if (remainingDays <= 0) return 0; // Avoid division by zero or negative days
+
+          const suggestedStudyTime = Math.min(
+            Math.round((hoursNeeded / remainingDays) * 10) / 10,
+            8
+          );
+
+          const docRef = db.collection("learning_plans").doc(student_id);
+          await docRef.update({
+            suggested_study_time: suggestedStudyTime,
+          });
+          console.log('Done updating ', student_id, 'suggested study time!');
+        },
+        { timezone: "Asia/Bangkok" }
+      );
+
+    const studentEmail = studentData.email;
+    const studyTimeStart = learningPlanData.study_time?.start;
+
+    if (studyTimeStart === '') {
+      console.log("Study time start not found");
+      return res.status(400).send({
+        success: false,
+        message: "Study time start not found",
+      });
+    }
+
+    const fithteenMinutes = studyTimeStart
+      .split(":")
+      .map((item) => parseInt(item));
+    fithteenMinutes[1] -= 15;
+    if (fithteenMinutes[1] < 0) {
+      fithteenMinutes[1] = 60 + fithteenMinutes[1];
+      fithteenMinutes[0] -= 1;
+    }
+    if (fithteenMinutes[0] < 0) {
+      fithteenMinutes[0] = 24 + fithteenMinutes[0];
+    }
+
+    if (preferredSchedules[student_id]) preferredSchedules[student_id].stop();
+
+    preferredSchedules[student_id] = cron.schedule(
+      `${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`,
       async () => {
-        console.log('Updating ', student_id, 'suggested study time...');
+        console.log(`sending reminder to ${student_id}`);
         const learningPlanRef = db.collection("learning_plans").doc(student_id);
         const learningPlanDoc = await learningPlanRef.get();
         if (!learningPlanDoc.exists) return;
 
         const learningPlanData = learningPlanDoc.data();
 
-        if (!learningPlanData.exam_date || !learningPlanData.target_score || !learningPlanData.initial_score) {
-          // If no exam date, target score or initial score, skip updating
-          console.log("No exam date or target score found", student_id);
+        const studyHours = learningPlanData.study_hours;
+        const studyHourCurrent = studyHours[studyHours.length - 1];
+
+        if (studyHourCurrent >= learningPlanData.suggested_study_time) {
+          console.log("Student has started study hour");
           return;
         }
 
-        const currentDate = new Date();
-        const examTime = new Date(learningPlanData.exam_date);
+        db.runTransaction(async (transaction) => {
+          const indexDocRef = db.collection("last_indices").doc("notifications");
+          const indexDocSnap = await transaction.get(indexDocRef);
 
-        const millisecondsPerDay = 1000 * 60 * 60 * 24;
-        const remainingDays = Math.ceil(
-          (examTime - currentDate) / millisecondsPerDay
-        );
-        const hoursNeeded =
-          0.3 *
-          (learningPlanData.target_score - learningPlanData.initial_score);
+          let lastIndex = 0;
+          if (indexDocSnap.exists) {
+            lastIndex = indexDocSnap.data().last_index;
+          }
 
-        if (remainingDays <= 0) return 0; // Avoid division by zero or negative days
+          const newIndex = lastIndex + 1;
+          const newId = `notifid_${newIndex}`;
+          const docRef = db.collection("notifications").doc(newId);
 
-        const suggestedStudyTime = Math.min(
-          Math.round((hoursNeeded / remainingDays) * 10) / 10,
-          8
-        );
+          transaction.set(indexDocRef, { last_index: newIndex }, { merge: true });
 
-        const docRef = db.collection("learning_plans").doc(student_id);
-        await docRef.update({
-          suggested_study_time: suggestedStudyTime,
+          transaction.set(docRef, {
+            teacher_id: null,
+            student_ids: [student_id],
+            title: `15 minutes before your preferred study time`,
+            description: `Hey, \n\n This is a reminder that your preferred study time is about to start in 15 minutes.`,
+            link: `/assignment`,
+            time_sent: new Date().toISOString(),
+            notification_id: newId,
+          });
+
+          console.log("Notifications added successfully with ID:", newId);
+          return newId;
         });
-        console.log('Done updating ', student_id, 'suggested study time!');
+
+        client.send(
+          message(
+            `Hey, \n\n This is a reminder that your preferred study time is about to start in 15 minutes.`,
+            from,
+            `15 minutes before your preferred study time`,
+            `<${studentEmail}>`
+          ),
+          (error, messageInfo) => {
+            if (error) {
+              console.log("Error sending email message:", error);
+            } else {
+              console.log("Successfully sent email message:", messageInfo);
+            }
+          }
+        );
       },
       { timezone: "Asia/Bangkok" }
     );
-
-  const studentEmail = studentData.email;
-  const studyTimeStart = learningPlanData.study_time?.start;
-
-  if (studyTimeStart === '') {
-    console.log("Study time start not found");
-    return res.status(400).send({
-      success: false,
-      message: "Study time start not found",
-    });
+    
+    res.status(200).send({ success: true });
+    const studentsName = studentData.name 
+    console.log(`Successfully set preferred time schedule for ${studentsName}`)
   }
-
-  const fithteenMinutes = studyTimeStart
-    .split(":")
-    .map((item) => parseInt(item));
-  fithteenMinutes[1] -= 15;
-  if (fithteenMinutes[1] < 0) {
-    fithteenMinutes[1] = 60 + fithteenMinutes[1];
-    fithteenMinutes[0] -= 1;
+  catch(error) {
+    res.status(400).send({ success: true, error });
   }
-  if (fithteenMinutes[0] < 0) {
-    fithteenMinutes[0] = 24 + fithteenMinutes[0];
-  }
-
-  if (preferredSchedules[student_id]) preferredSchedules[student_id].stop();
-
-  preferredSchedules[student_id] = cron.schedule(
-    `${fithteenMinutes[1]} ${fithteenMinutes[0]} * * *`,
-    async () => {
-      console.log(`sending reminder to ${student_id}`);
-      const learningPlanRef = db.collection("learning_plans").doc(student_id);
-      const learningPlanDoc = await learningPlanRef.get();
-      if (!learningPlanDoc.exists) return;
-
-      const learningPlanData = learningPlanDoc.data();
-
-      const studyHours = learningPlanData.study_hours;
-      const studyHourCurrent = studyHours[studyHours.length - 1];
-
-      if (studyHourCurrent >= learningPlanData.suggested_study_time) {
-        console.log("Student has started study hour");
-        return;
-      }
-
-      db.runTransaction(async (transaction) => {
-        const indexDocRef = db.collection("last_indices").doc("notifications");
-        const indexDocSnap = await transaction.get(indexDocRef);
-
-        let lastIndex = 0;
-        if (indexDocSnap.exists) {
-          lastIndex = indexDocSnap.data().last_index;
-        }
-
-        const newIndex = lastIndex + 1;
-        const newId = `notifid_${newIndex}`;
-        const docRef = db.collection("notifications").doc(newId);
-
-        transaction.set(indexDocRef, { last_index: newIndex }, { merge: true });
-
-        transaction.set(docRef, {
-          teacher_id: null,
-          student_ids: [student_id],
-          title: `15 minutes before your preferred study time`,
-          description: `Hey, \n\n This is a reminder that your preferred study time is about to start in 15 minutes.`,
-          link: `/assignment`,
-          time_sent: new Date().toISOString(),
-          notification_id: newId,
-        });
-
-        console.log("Notifications added successfully with ID:", newId);
-        return newId;
-      });
-
-      client.send(
-        message(
-          `Hey, \n\n This is a reminder that your preferred study time is about to start in 15 minutes.`,
-          from,
-          `15 minutes before your preferred study time`,
-          `<${studentEmail}>`
-        ),
-        (error, messageInfo) => {
-          if (error) {
-            console.log("Error sending email message:", error);
-          } else {
-            console.log("Successfully sent email message:", messageInfo);
-          }
-        }
-      );
-    },
-    { timezone: "Asia/Bangkok" }
-  );
-  
-  res.status(200).send({ success: true });
 });
 
 const server = app.listen(port, function () {
