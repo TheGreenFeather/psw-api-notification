@@ -168,9 +168,14 @@ app.post("/api/setschedule-assignment", async function (req, res) {
     }
 
     const assignmentData = assignmentDoc.data();
-    let deadline = assignmentData.deadline.split("/");
-    deadline = `${deadline[1]}/${deadline[0]}/${deadline[2]}`;
+    const deadline = assignmentData.deadline;
+    // deadline = `${deadline[1]}/${deadline[0]}/${deadline[2]}`;
     const assignmentName = assignmentData.name;
+
+    if (isNaN(new Date(deadline))) {
+      console.log(`Invalid deadline`);
+      return res.status(400).send({ success: false, message: `Invalid deadline` });
+    }
 
     const threeDaysBefore = new Date(deadline);
     threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
@@ -195,6 +200,7 @@ app.post("/api/setschedule-assignment", async function (req, res) {
     } *`;
 
     if(!cron.validate(schedule0) || !cron.validate(schedule1) || !cron.validate(schedule3)) {
+      console.log(`Invalid Schedule Time - Specifically schedule0: ${cron.validate(schedule0)} | schedule1: ${cron.validate(schedule1)} | schedule1: ${cron.validate(schedule1)}`);
       return res.status(400).send({ success: false, message: `Invalid Schedule Time - Specifically schedule0: ${cron.validate(schedule0)} | schedule1: ${cron.validate(schedule1)} | schedule1: ${cron.validate(schedule1)}` });
     }
 
